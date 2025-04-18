@@ -1,0 +1,8 @@
+[profile.default]
+src = 'contracts'
+out = 'out'
+libs = ['node_modules']
+
+[rpc_endpoints]
+ronin = "https://api.roninchain.com/rpc"
+saigon = "https://saigon-api.roninchain.com/rpc"
