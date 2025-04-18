@@ -1,0 +1,61 @@
+[
+  {
+    "id": "1",
+    "name": "Test Tournament",
+    "description": "A test tournament for e2e testing",
+    "game": "Axie Infinity",
+    "creator": "0x1234567890123456789012345678901234567890",
+    "tournamentType": "single-elimination",
+    "currentParticipants": 8,
+    "participants": [
+      {
+        "address": "0x0234567890123456789012345678901234567890",
+        "name": "Player 1"
+      },
+      {
+        "address": "0x1234567890123456789012345678901234567890",
+        "name": "Player 2"
+      },
+      {
+        "address": "0x2234567890123456789012345678901234567890",
+        "name": "Player 3"
+      },
+      {
+        "address": "0x3234567890123456789012345678901234567890",
+        "name": "Player 4"
+      },
+      {
+        "address": "0x4234567890123456789012345678901234567890",
+        "name": "Player 5"
+      },
+      {
+        "address": "0x5234567890123456789012345678901234567890",
+        "name": "Player 6"
+      },
+      {
+        "address": "0x6234567890123456789012345678901234567890",
+        "name": "Player 7"
+      },
+      {
+        "address": "0x7234567890123456789012345678901234567890",
+        "name": "Player 8"
+      }
+    ],
+    "startDate": "2025-04-20T00:00:00.000Z",
+    "registrationEndDate": "2025-04-19T00:00:00.000Z",
+    "status": "registration",
+    "rewardType": "token",
+    "rewardAmount": "100",
+    "rewardToken": "RON",
+    "rewardDistribution": {
+      "first": 50,
+      "second": 30,
+      "third": 15,
+      "fourth": 5
+    },
+    "hasEntryFee": true,
+    "entryFeeAmount": "10",
+    "entryFeeToken": "RON",
+    "brackets": []
+  }
+]

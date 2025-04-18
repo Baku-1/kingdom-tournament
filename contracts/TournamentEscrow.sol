@@ -93,7 +93,7 @@ contract TournamentEscrow is Ownable, ReentrancyGuard {
     }
 
     // Tournament creator declares winners
-    function declareWinner(uint256 tournamentId, uint256 position, address winner) external {
+    function declareWinner(uint256 tournamentId, uint256 position, address winner) external nonReentrant {
         Tournament storage tournament = tournaments[tournamentId];
         require(msg.sender == tournament.creator, "Not tournament creator");
         require(tournament.isActive, "Tournament not active");
