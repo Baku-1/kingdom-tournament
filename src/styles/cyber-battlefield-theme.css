@@ -1,0 +1,300 @@
+/* Cyber Battlefield Theme */
+
+:root {
+  /* Primary Colors */
+  --cyber-primary: #00f0ff;
+  --cyber-secondary: #ff00a0;
+  --cyber-accent: #ffcc00;
+
+  /* Background Colors */
+  --cyber-bg-dark: #0a0e17;
+  --cyber-bg-medium: #141a26;
+  --cyber-bg-light: #1c2333;
+
+  /* Text Colors */
+  --cyber-text-primary: #ffffff;
+  --cyber-text-secondary: #b8c0d2;
+  --cyber-text-muted: #6c7a94;
+
+  /* Border Colors */
+  --cyber-border-glow: rgba(0, 240, 255, 0.5);
+  --cyber-border-accent: rgba(255, 0, 160, 0.7);
+
+  /* Gradients */
+  --cyber-gradient-primary: linear-gradient(135deg, var(--cyber-primary), var(--cyber-secondary));
+  --cyber-gradient-dark: linear-gradient(135deg, var(--cyber-bg-dark), var(--cyber-bg-medium));
+
+  /* Shadows */
+  --cyber-shadow-sm: 0 0 5px rgba(0, 240, 255, 0.3);
+  --cyber-shadow-md: 0 0 15px rgba(0, 240, 255, 0.4);
+  --cyber-shadow-lg: 0 0 25px rgba(0, 240, 255, 0.5);
+
+  /* Animation */
+  --cyber-pulse-animation: pulse 2s infinite;
+}
+
+/* Override default theme variables */
+:root {
+  --background: var(--cyber-bg-dark);
+  --foreground: var(--cyber-text-primary);
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--cyber-bg-dark);
+    --foreground: var(--cyber-text-primary);
+  }
+}
+
+/* Body Styles */
+body {
+  background-color: var(--cyber-bg-dark);
+  color: var(--cyber-text-primary);
+  font-family: 'Orbitron', 'Rajdhani', sans-serif;
+  background-image: url('/background.png'); /* Make sure this file exists in the public folder */
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
+  z-index: 0;
+}
+
+/* Header Styles */
+header {
+  background: var(--cyber-bg-medium) !important;
+  border-bottom: 1px solid var(--cyber-border-glow) !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+header a, header button {
+  color: var(--cyber-text-primary) !important;
+  transition: color 0.3s, text-shadow 0.3s;
+}
+
+header a:hover, header button:hover {
+  color: var(--cyber-primary) !important;
+  text-shadow: 0 0 5px var(--cyber-primary);
+}
+
+/* Footer Styles */
+footer {
+  background: var(--cyber-bg-medium) !important;
+  color: var(--cyber-text-secondary) !important;
+  border-top: 1px solid var(--cyber-border-glow) !important;
+}
+
+footer a:hover {
+  color: var(--cyber-primary) !important;
+  text-decoration: none !important;
+  text-shadow: 0 0 5px var(--cyber-primary);
+}
+
+/* Button Styles */
+button, .btn, a.btn, [type="button"], [type="submit"] {
+  background: var(--cyber-bg-light) !important;
+  color: var(--cyber-primary) !important;
+  border: 1px solid var(--cyber-primary) !important;
+  box-shadow: 0 0 5px var(--cyber-border-glow) !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+button:hover, .btn:hover, a.btn:hover, [type="button"]:hover, [type="submit"]:hover {
+  background: var(--cyber-primary) !important;
+  color: var(--cyber-bg-dark) !important;
+  box-shadow: 0 0 15px var(--cyber-border-glow) !important;
+  transform: translateY(-2px);
+}
+
+button:disabled, .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Primary Button */
+.bg-blue-500, .bg-blue-600, .hover\:bg-blue-600 {
+  background: var(--cyber-primary) !important;
+  color: var(--cyber-bg-dark) !important;
+  border: 1px solid var(--cyber-primary) !important;
+  box-shadow: 0 0 10px var(--cyber-border-glow) !important;
+}
+
+.bg-blue-500:hover, .bg-blue-600:hover, .hover\:bg-blue-600:hover {
+  background: transparent !important;
+  color: var(--cyber-primary) !important;
+  box-shadow: 0 0 15px var(--cyber-border-glow) !important;
+}
+
+/* Secondary Button */
+.bg-green-500, .bg-green-600, .hover\:bg-green-600 {
+  background: var(--cyber-secondary) !important;
+  color: var(--cyber-text-primary) !important;
+  border: 1px solid var(--cyber-secondary) !important;
+  box-shadow: 0 0 10px var(--cyber-border-accent) !important;
+}
+
+.bg-green-500:hover, .bg-green-600:hover, .hover\:bg-green-600:hover {
+  background: transparent !important;
+  color: var(--cyber-secondary) !important;
+  box-shadow: 0 0 15px var(--cyber-border-accent) !important;
+}
+
+/* Card Styles */
+.bg-white, .bg-gray-50 {
+  background: var(--cyber-bg-light) !important;
+  border: 1px solid var(--cyber-border-glow) !important;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2) !important;
+}
+
+/* Border Styles */
+.border-gray-200 {
+  border-color: var(--cyber-border-glow) !important;
+}
+
+/* Text Styles */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--cyber-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+/* Ensure all paragraph text is visible */
+p, span, div, li, td, th {
+  color: var(--cyber-text-primary);
+}
+
+/* Text color overrides to ensure visibility on dark backgrounds */
+.text-gray-600, .text-gray-700, .text-gray-800, .text-gray-900, .text-black {
+  color: var(--cyber-text-primary) !important;
+}
+
+/* Ensure modal text is visible */
+.bg-white .text-black, .bg-white .text-gray-700, .bg-white .text-gray-800, .bg-white .text-gray-900 {
+  color: var(--cyber-text-primary) !important;
+}
+
+/* Link Styles */
+a {
+  color: var(--cyber-primary);
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: var(--cyber-secondary);
+  text-shadow: 0 0 5px var(--cyber-secondary);
+}
+
+/* Form Styles */
+input, select, textarea {
+  background: var(--cyber-bg-medium) !important;
+  color: var(--cyber-text-primary) !important;
+  border: 1px solid var(--cyber-border-glow) !important;
+  box-shadow: inset 0 0 5px rgba(0, 240, 255, 0.2) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--cyber-primary) !important;
+  box-shadow: 0 0 10px var(--cyber-border-glow) !important;
+  outline: none;
+}
+
+/* Status Colors */
+.text-green-500, .text-green-600 {
+  color: var(--cyber-primary) !important;
+}
+
+.text-red-500, .text-red-600 {
+  color: var(--cyber-secondary) !important;
+}
+
+.text-yellow-500, .text-yellow-600 {
+  color: var(--cyber-accent) !important;
+}
+
+/* Animation Keyframes */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 240, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 240, 255, 0);
+  }
+}
+
+/* Tournament Cards */
+.hover\:translate-y-\[-5px\]:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 5px 15px rgba(0, 240, 255, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: var(--cyber-gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+/* Glowing Border */
+.glow-border {
+  position: relative;
+}
+
+.glow-border::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: var(--cyber-gradient-primary);
+  z-index: -1;
+  filter: blur(10px);
+  opacity: 0.7;
+  border-radius: inherit;
+}
+
+/* Cyber Grid Background */
+.cyber-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.cyber-grid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(to right, rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Main content container with background image */
+.main-content {
+  position: relative;
+  z-index: 1;
+  background-color: rgba(10, 14, 23, 0.6);
+  border-radius: 8px;
+  border: 1px solid var(--cyber-border-glow);
+  box-shadow: 0 0 15px var(--cyber-shadow-md);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  padding: 20px;
+  margin: 20px 0;
+}

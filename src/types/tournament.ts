@@ -1,4 +1,4 @@
-import { Bracket, Participant } from '@/utils/bracketUtils';
+import { Bracket, Participant, TournamentType } from '@/utils/bracketUtils';
 
 export interface Tournament {
   id: string;
@@ -6,7 +6,7 @@ export interface Tournament {
   description: string;
   game: string;
   creator: string;
-  tournamentType: string;
+  tournamentType: TournamentType;
   maxParticipants: number;
   currentParticipants: number;
   participants: Participant[];
@@ -26,4 +26,5 @@ export interface Tournament {
   entryFeeAmount: string;
   entryFeeToken: string;
   brackets: Bracket[];
+  lastUpdated?: number; // Timestamp to force React to detect changes
 }

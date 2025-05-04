@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "../styles/cyber-battlefield-theme.css";
+@import "../styles/animated-background.css";
 
 :root {
   --background: #ffffff;

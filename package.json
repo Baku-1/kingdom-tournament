@@ -10,7 +10,9 @@
     "test": "hardhat test",
     "test:contract": "hardhat test",
     "test:e2e": "cypress run",
-    "cypress:open": "cypress open"
+    "cypress:open": "cypress open",
+    "ngrok": "ngrok http 3000",
+    "share": "node ngrok-start.js"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.16.0",
@@ -47,6 +49,7 @@
     "eslint-config-next": "15.3.1",
     "hardhat": "^2.23.0",
     "hardhat-gas-reporter": "^1.0.8",
+    "ngrok": "^5.0.0-beta.2",
     "solidity-coverage": "^0.8.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.1",

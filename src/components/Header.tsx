@@ -19,8 +19,8 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
-            <div className="font-bold text-xl">
-              <Link href="/">Kingdom Tournament</Link>
+            <div className="font-bold text-xl" style={{ fontFamily: 'var(--font-orbitron)' }}>
+              <Link href="/" className="gradient-text">Cyber Battlefield</Link>
             </div>
             <nav className="hidden md:flex space-x-4">
               <NavLink href="/tournaments" isActive={pathname === '/tournaments'}>

@@ -9,12 +9,12 @@ export default function Footer() {
       <div className="container mx-auto py-10 px-4 space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8">
           <div>
-            <h3 className="text-lg font-bold mb-2">
-              Kingdom Tournament
+            <h3 className="text-lg font-bold mb-2" style={{ fontFamily: 'var(--font-orbitron)' }}>
+              Cyber Battlefield
             </h3>
             <p className="text-sm max-w-xs">
-              Create and join tournaments for your favorite games on the Ronin Blockchain.
-              Compete for token and NFT rewards in a secure, decentralized platform.
+              Enter the digital arena and battle for supremacy on the Ronin Blockchain.
+              Compete for token and NFT rewards in this futuristic, decentralized platform.
             </p>
           </div>
 
@@ -47,7 +47,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-200 pt-8">
           <p className="text-center text-sm">
-            © {new Date().getFullYear()} Kingdom Tournament. All rights reserved.
+            © {new Date().getFullYear()} <span className="gradient-text">Cyber Battlefield</span>. All rights reserved.
           </p>
         </div>
       </div>

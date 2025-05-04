@@ -1,0 +1,251 @@
+
+
+  Simple Test
+    ✔ Should pass
+
+  TournamentEscrow Failure Tests
+    Tournament Creation Failures
+      ✔ Should fail with empty name
+      ✔ Should accept any valid uint8 tournament type
+      1) Should accept registration end time in the past (no validation)
+      2) Should accept start time before registration end time (no validation)
+      ✔ Should fail with invalid token address
+    Winner Declaration Failures
+      ✔ Should fail declaring winner for non-existent tournament
+      ✔ Should fail declaring winner for invalid position
+      ✔ Should fail declaring winner with zero address
+      ✔ Should fail declaring winner after tournament cancellation
+    Reward Claiming Failures
+      ✔ Should fail claiming from non-existent tournament
+      ✔ Should fail claiming for undeclared winner
+      ✔ Should fail claiming with wrong winner address
+This test verifies that token transfers will fail if the contract has insufficient balance
+This is a security feature of ERC20 tokens that the contract relies on
+      ✔ Should fail if token transfer fails due to insufficient balance
+    Tournament Cancellation Failures
+      ✔ Should fail cancelling non-existent tournament
+This test verifies that token transfers during cancellation will fail if the contract has insufficient balance
+This is a security feature of ERC20 tokens that the contract relies on
+      ✔ Should handle token transfer failures during cancellation
+      ✔ Should fail if trying to cancel after all rewards claimed
+    View Function Failures
+      ✔ Should fail getting position info for invalid position
+      ✔ Should fail getting position info for non-existent tournament
+      ✔ Should return empty array for getPositionRewardAmounts on non-existent tournament
+
+  TournamentEscrow
+    Tournament Creation
+      ✔ Should create a tournament with ERC20 token rewards
+      ✔ Should create a tournament with native token rewards
+      ✔ Should fail if no positions are provided
+      ✔ Should fail if token approval is insufficient
+      ✔ Should fail if sending native tokens with ERC20 tournament
+      ✔ Should fail if native token amount doesn't match reward total
+    Winner Declaration and Reward Claiming
+      ✔ Should allow creator to declare a winner
+      ✔ Should not allow non-creator to declare a winner
+      ✔ Should allow winner to claim reward
+      ✔ Should not allow claiming reward twice
+      ✔ Should not allow claiming for invalid position
+      ✔ Should not allow non-winner to claim reward
+      ✔ Should allow declaring winners for multiple positions
+      ✔ Should not allow declaring winner for already claimed position
+      ✔ Should not allow claiming from inactive tournament
+    Tournament Cancellation
+      ✔ Should allow creator to cancel tournament
+      ✔ Should not allow non-creator to cancel tournament
+      ✔ Should not allow cancelling an already cancelled tournament
+      ✔ Should return partial funds if some positions were already claimed
+      ✔ Should handle cancellation of tournament with no unclaimed rewards
+      ✔ Should handle cancellation of tournament with native token rewards
+
+  TournamentEscrow
+    Tournament Creation
+      3) Should create a tournament with token rewards
+      4) Should fail if reward token approval is insufficient
+    Winner Declaration and Reward Distribution
+      5) "before each" hook for "Should allow creator to declare winner"
+
+  TournamentEscrowV2 - Basic Functionality
+    Tournament Creation
+      ✔ Should create a tournament with ERC20 token rewards
+      ✔ Should create a tournament with native token rewards
+      ✔ Should fail if name is empty
+      ✔ Should fail if tournament type is invalid
+      ✔ Should fail if registration end time is in the past
+      ✔ Should fail if start time is before registration end time
+    Tournament Info Retrieval
+      6) "before each" hook for "Should retrieve tournament info correctly"
+
+  TournamentEscrowV2 - Tournament Cancellation
+    Tournament Cancellation
+      ✔ Should allow creator to cancel tournament
+      ✔ Should not allow non-creator to cancel tournament
+      ✔ Should not allow cancelling an already cancelled tournament
+      ✔ Should return partial funds if some positions were already claimed
+      ✔ Should handle cancellation of tournament with no unclaimed rewards
+    Native Token Tournament Cancellation
+      ✔ Should handle cancellation of tournament with native token rewards
+      ✔ Should handle partial refund with native tokens
+
+  TournamentEscrowV2 - Registration and Entry Fees
+    Tournament Registration (No Entry Fee)
+      ✔ Should allow participants to register
+      ✔ Should not allow duplicate registrations
+      ✔ Should not allow registration after end time
+      7) Should enforce max participants limit
+      8) Should allow unlimited participants when max is 0
+    Tournament with Entry Fee
+      ✔ Should require entry fee for registration
+      ✔ Should fail registration without entry fee approval
+      ✔ Should distribute entry fees correctly
+      ✔ Should allow owner to withdraw platform fees
+      ✔ Should not allow non-owner to withdraw platform fees
+      ✔ Should not allow using registerForTournament for entry fee tournaments
+      9) Should not allow using registerWithEntryFee for non-entry fee tournaments
+
+  TournamentEscrowV2 - Winner Declaration and Rewards
+    Winner Declaration
+      ✔ Should allow creator to declare a winner
+      ✔ Should allow declaring multiple winners at once
+      ✔ Should not allow non-creator to declare a winner
+      ✔ Should not allow declaring winner for invalid position
+      ✔ Should not allow declaring winner with zero address
+      10) Should not allow declaring winner before tournament starts
+    Reward Claiming
+      ✔ Should allow winner to claim reward
+      ✔ Should not allow claiming reward twice
+      ✔ Should not allow non-winner to claim reward
+      ✔ Should not allow claiming for invalid position
+      ✔ Should not allow claiming from inactive tournament
+      ✔ Should correctly identify winner positions
+      ✔ Should fail to get position for non-winner
+
+
+  73 passing (4s)
+  10 failing
+
+  1) TournamentEscrow Failure Tests
+       Tournament Creation Failures
+         Should accept registration end time in the past (no validation):
+     AssertionError: Expected transaction NOT to be reverted, but it reverted with reason 'ERC20: insufficient allowance'
+      at Context.<anonymous> (test\TournamentEscrow.failure.test.js:139:7)
+
+  2) TournamentEscrow Failure Tests
+       Tournament Creation Failures
+         Should accept start time before registration end time (no validation):
+     AssertionError: Expected transaction NOT to be reverted, but it reverted with reason 'ERC20: insufficient allowance'
+      at Context.<anonymous> (test\TournamentEscrow.failure.test.js:169:7)
+
+  3) TournamentEscrow
+       Tournament Creation
+         Should create a tournament with token rewards:
+     TypeError: unsupported addressable value (argument="target", value=null, code=INVALID_ARGUMENT, version=6.13.5)
+      at makeError (node_modules\ethers\src.ts\utils\errors.ts:687:21)
+      at assert (node_modules\ethers\src.ts\utils\errors.ts:715:25)
+      at assertArgument (node_modules\ethers\src.ts\utils\errors.ts:727:5)
+      at resolveAddress (node_modules\ethers\src.ts\address\checks.ts:122:19)
+      at C:\Users\jerem\Documents\augment-projects\Kingdom_Tournament\kingdom-tournament\node_modules\ethers\src.ts\contract\contract.ts:172:60
+      at ParamType.#walkAsync (node_modules\ethers\src.ts\abi\fragments.ts:779:24)
+      at ParamType.walkAsync (node_modules\ethers\src.ts\abi\fragments.ts:797:24)
+      at C:\Users\jerem\Documents\augment-projects\Kingdom_Tournament\kingdom-tournament\node_modules\ethers\src.ts\contract\contract.ts:170:22
+      at Array.map (<anonymous>)
+      at resolveArgs (node_modules\ethers\src.ts\contract\contract.ts:169:37)
+
+  4) TournamentEscrow
+       Tournament Creation
+         Should fail if reward token approval is insufficient:
+     TypeError: unsupported addressable value (argument="target", value=null, code=INVALID_ARGUMENT, version=6.13.5)
+      at makeError (node_modules\ethers\src.ts\utils\errors.ts:687:21)
+      at assert (node_modules\ethers\src.ts\utils\errors.ts:715:25)
+      at assertArgument (node_modules\ethers\src.ts\utils\errors.ts:727:5)
+      at resolveAddress (node_modules\ethers\src.ts\address\checks.ts:122:19)
+      at C:\Users\jerem\Documents\augment-projects\Kingdom_Tournament\kingdom-tournament\node_modules\ethers\src.ts\contract\contract.ts:172:60
+      at ParamType.#walkAsync (node_modules\ethers\src.ts\abi\fragments.ts:779:24)
+      at ParamType.walkAsync (node_modules\ethers\src.ts\abi\fragments.ts:797:24)
+      at C:\Users\jerem\Documents\augment-projects\Kingdom_Tournament\kingdom-tournament\node_modules\ethers\src.ts\contract\contract.ts:170:22
+      at Array.map (<anonymous>)
+      at resolveArgs (node_modules\ethers\src.ts\contract\contract.ts:169:37)
+
+  5) TournamentEscrow
+       Winner Declaration and Reward Distribution
+         "before each" hook for "Should allow creator to declare winner":
+     TypeError: unsupported addressable value (argument="target", value=null, code=INVALID_ARGUMENT, version=6.13.5)
+      at makeError (node_modules\ethers\src.ts\utils\errors.ts:687:21)
+      at assert (node_modules\ethers\src.ts\utils\errors.ts:715:25)
+      at assertArgument (node_modules\ethers\src.ts\utils\errors.ts:727:5)
+      at resolveAddress (node_modules\ethers\src.ts\address\checks.ts:122:19)
+      at C:\Users\jerem\Documents\augment-projects\Kingdom_Tournament\kingdom-tournament\node_modules\ethers\src.ts\contract\contract.ts:172:60
+      at ParamType.#walkAsync (node_modules\ethers\src.ts\abi\fragments.ts:779:24)
+      at ParamType.walkAsync (node_modules\ethers\src.ts\abi\fragments.ts:797:24)
+      at C:\Users\jerem\Documents\augment-projects\Kingdom_Tournament\kingdom-tournament\node_modules\ethers\src.ts\contract\contract.ts:170:22
+      at Array.map (<anonymous>)
+      at resolveArgs (node_modules\ethers\src.ts\contract\contract.ts:169:37)
+
+  6) TournamentEscrowV2 - Basic Functionality
+       Tournament Info Retrieval
+         "before each" hook for "Should retrieve tournament info correctly":
+     Error: VM Exception while processing transaction: reverted with reason string 'Registration end time must be in the future'
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:204)
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:215)
+    at EdrProviderWrapper.request (node_modules\hardhat\src\internal\hardhat-network\provider\provider.ts:359:41)
+    at HardhatEthersSigner.sendTransaction (node_modules\@nomicfoundation\hardhat-ethers\src\signers.ts:125:18)
+    at send (node_modules\ethers\src.ts\contract\contract.ts:313:20)
+    at Proxy.createTournament (node_modules\ethers\src.ts\contract\contract.ts:352:16)
+    at Context.<anonymous> (test\TournamentEscrowV2.basic.test.js:271:18)
+  
+
+  7) TournamentEscrowV2 - Registration and Entry Fees
+       Tournament Registration (No Entry Fee)
+         Should enforce max participants limit:
+     Error: VM Exception while processing transaction: reverted with reason string 'Registration end time must be in the future'
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:204)
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:215)
+    at EdrProviderWrapper.request (node_modules\hardhat\src\internal\hardhat-network\provider\provider.ts:359:41)
+    at HardhatEthersSigner.sendTransaction (node_modules\@nomicfoundation\hardhat-ethers\src\signers.ts:125:18)
+    at send (node_modules\ethers\src.ts\contract\contract.ts:313:20)
+    at Proxy.createTournament (node_modules\ethers\src.ts\contract\contract.ts:352:16)
+    at Context.<anonymous> (test\TournamentEscrowV2.registration.test.js:144:18)
+  
+
+  8) TournamentEscrowV2 - Registration and Entry Fees
+       Tournament Registration (No Entry Fee)
+         Should allow unlimited participants when max is 0:
+     Error: VM Exception while processing transaction: reverted with reason string 'Registration end time must be in the future'
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:204)
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:215)
+    at EdrProviderWrapper.request (node_modules\hardhat\src\internal\hardhat-network\provider\provider.ts:359:41)
+    at HardhatEthersSigner.sendTransaction (node_modules\@nomicfoundation\hardhat-ethers\src\signers.ts:125:18)
+    at send (node_modules\ethers\src.ts\contract\contract.ts:313:20)
+    at Proxy.createTournament (node_modules\ethers\src.ts\contract\contract.ts:352:16)
+    at Context.<anonymous> (test\TournamentEscrowV2.registration.test.js:184:18)
+  
+
+  9) TournamentEscrowV2 - Registration and Entry Fees
+       Tournament with Entry Fee
+         Should not allow using registerWithEntryFee for non-entry fee tournaments:
+     Error: VM Exception while processing transaction: reverted with reason string 'Registration end time must be in the future'
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:204)
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:215)
+    at EdrProviderWrapper.request (node_modules\hardhat\src\internal\hardhat-network\provider\provider.ts:359:41)
+    at HardhatEthersSigner.sendTransaction (node_modules\@nomicfoundation\hardhat-ethers\src\signers.ts:125:18)
+    at send (node_modules\ethers\src.ts\contract\contract.ts:313:20)
+    at Proxy.createTournament (node_modules\ethers\src.ts\contract\contract.ts:352:16)
+    at Context.<anonymous> (test\TournamentEscrowV2.registration.test.js:384:18)
+  
+
+  10) TournamentEscrowV2 - Winner Declaration and Rewards
+       Winner Declaration
+         Should not allow declaring winner before tournament starts:
+     Error: VM Exception while processing transaction: reverted with reason string 'Registration end time must be in the future'
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:204)
+    at TournamentEscrowV2.createTournament (contracts/TournamentEscrowV2.sol:215)
+    at EdrProviderWrapper.request (node_modules\hardhat\src\internal\hardhat-network\provider\provider.ts:359:41)
+    at HardhatEthersSigner.sendTransaction (node_modules\@nomicfoundation\hardhat-ethers\src\signers.ts:125:18)
+    at send (node_modules\ethers\src.ts\contract\contract.ts:313:20)
+    at Proxy.createTournament (node_modules\ethers\src.ts\contract\contract.ts:352:16)
+    at Context.<anonymous> (test\TournamentEscrowV2.winners.test.js:169:18)
+  
+
+
+

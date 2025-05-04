@@ -8,15 +8,15 @@ export default function Home() {
   const { connectedAddress, connectWallet, isConnecting } = useWallet();
 
   return (
-    <div className="bg-gradient-to-b from-blue-50 to-white min-h-screen py-10">
+    <div className="min-h-screen py-10">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center text-center py-10 space-y-8">
-          <h1 className="text-4xl font-bold">
-            Kingdom Tournament
+          <h1 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-orbitron)' }}>
+            <span className="gradient-text">CYBER BATTLEFIELD</span>
           </h1>
-          <p className="text-xl max-w-3xl">
-            Create and join tournaments for your favorite games on the Ronin Blockchain.
-            Compete for token and NFT rewards in a secure, decentralized platform.
+          <p className="text-xl max-w-3xl" style={{ fontFamily: 'var(--font-rajdhani)' }}>
+            Enter the digital arena and battle for supremacy on the Ronin Blockchain.
+            Compete for token and NFT rewards in this futuristic, decentralized platform.
           </p>
 
           {!connectedAddress ? (
@@ -43,24 +43,24 @@ export default function Home() {
         </div>
 
         <div className="mt-20">
-          <h2 className="text-2xl font-bold text-center mb-10">
-            How It Works
+          <h2 className="text-2xl font-bold text-center mb-10" style={{ fontFamily: 'var(--font-orbitron)' }}>
+            <span className="gradient-text">BATTLE PROTOCOL</span>
           </h2>
 
           <div className="flex flex-col md:flex-row gap-8 justify-center items-center">
             <Feature
-              title="Create Tournaments"
-              description="Set up tournaments for your favorite Ronin blockchain games with customizable brackets and rewards."
+              title="DEPLOY ARENA"
+              description="Establish your digital battleground on the Ronin blockchain with customizable brackets and high-stakes rewards."
               icon="/icons/create.svg"
             />
             <Feature
-              title="Join & Compete"
-              description="Sign up for tournaments using your Ronin wallet and compete against other players."
+              title="ENTER COMBAT"
+              description="Connect your Ronin wallet to join the fray and test your skills against elite cyber warriors."
               icon="/icons/compete.svg"
             />
             <Feature
-              title="Win Rewards"
-              description="Winners receive automatic payouts of token or NFT rewards directly to their wallets."
+              title="CLAIM VICTORY"
+              description="Conquer your opponents and receive automatic token or NFT rewards directly to your digital arsenal."
               icon="/icons/reward.svg"
             />
           </div>
@@ -72,15 +72,15 @@ export default function Home() {
 
 function Feature({ title, description, icon }: { title: string; description: string; icon: string }) {
   return (
-    <div className="flex flex-col items-center p-8 bg-white shadow-md rounded-lg max-w-sm space-y-4">
-      <div className="p-2 rounded-full bg-blue-50">
+    <div className="flex flex-col items-center p-8 bg-cyber-bg-light border border-cyber-primary shadow-md rounded-lg max-w-sm space-y-4 glow-border">
+      <div className="p-2 rounded-full" style={{ background: 'rgba(0, 240, 255, 0.1)' }}>
         {/* Placeholder for icon - replace with actual icons later */}
-        <div className="w-12 h-12 bg-blue-500 rounded-full"></div>
+        <div className="w-12 h-12 rounded-full" style={{ background: 'var(--cyber-gradient-primary)' }}></div>
       </div>
-      <h3 className="text-lg font-medium">
-        {title}
+      <h3 className="text-lg font-medium" style={{ fontFamily: 'var(--font-orbitron)' }}>
+        <span className="gradient-text">{title}</span>
       </h3>
-      <p className="text-center">
+      <p className="text-center" style={{ fontFamily: 'var(--font-rajdhani)' }}>
         {description}
       </p>
     </div>
