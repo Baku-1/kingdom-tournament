@@ -183,6 +183,7 @@ export default function TournamentDetail() {
   const [tournament, setTournament] = useState<Tournament>(MOCK_TOURNAMENT as Tournament);
   const [isLoading, setIsLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
+  // Using isCreator in conditional rendering below
   const [isCreator, setIsCreator] = useState(true); // Set to true for testing
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);

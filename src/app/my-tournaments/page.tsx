@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/providers/WalletProvider';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { SUPPORTED_GAMES } from '@/config/ronin';
 
@@ -62,9 +61,9 @@ const MOCK_JOINED_TOURNAMENTS = [
 
 export default function MyTournaments() {
   const { connectedAddress, connectWallet } = useWallet();
-  const router = useRouter();
-  const [createdTournaments, setCreatedTournaments] = useState(MOCK_CREATED_TOURNAMENTS);
-  const [joinedTournaments, setJoinedTournaments] = useState(MOCK_JOINED_TOURNAMENTS);
+  // Remove unused router import
+  const [createdTournaments, _setCreatedTournaments] = useState(MOCK_CREATED_TOURNAMENTS);
+  const [joinedTournaments, _setJoinedTournaments] = useState(MOCK_JOINED_TOURNAMENTS);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('created');
 
@@ -74,7 +73,7 @@ export default function MyTournaments() {
       const timer = setTimeout(() => {
         setIsLoading(false);
       }, 1000);
-  
+
       return () => clearTimeout(timer);
     }
   }, [connectedAddress]);
@@ -119,7 +118,7 @@ export default function MyTournaments() {
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8">
           <h1 className="text-2xl font-bold">Connect Wallet</h1>
           <p>Please connect your Ronin wallet to view your tournaments</p>
-          <button 
+          <button
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
             onClick={connectWallet}
           >
@@ -149,13 +148,13 @@ export default function MyTournaments() {
         <div>
           <div className="border-b border-gray-200">
             <div className="flex space-x-4">
-              <button 
+              <button
                 className={`px-4 py-2 ${activeTab === 'created' ? 'border-b-2 border-blue-500 text-blue-500 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
                 onClick={() => setActiveTab('created')}
               >
                 Created Tournaments
               </button>
-              <button 
+              <button
                 className={`px-4 py-2 ${activeTab === 'joined' ? 'border-b-2 border-blue-500 text-blue-500 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
                 onClick={() => setActiveTab('joined')}
               >
@@ -170,7 +169,7 @@ export default function MyTournaments() {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-lg font-medium">Tournaments You Created</h2>
-                  <Link 
+                  <Link
                     href="/tournaments/create"
                     className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm rounded"
                   >
@@ -182,7 +181,7 @@ export default function MyTournaments() {
                   <div className="flex items-center justify-center min-h-[200px] bg-white p-6 border border-gray-200 rounded-md">
                     <div className="flex flex-col items-center">
                       <p>You haven't created any tournaments yet</p>
-                      <Link 
+                      <Link
                         href="/tournaments/create"
                         className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm rounded mt-2"
                       >
@@ -218,7 +217,7 @@ export default function MyTournaments() {
                   <div className="flex items-center justify-center min-h-[200px] bg-white p-6 border border-gray-200 rounded-md">
                     <div className="flex flex-col items-center">
                       <p>You haven't joined any tournaments yet</p>
-                      <Link 
+                      <Link
                         href="/tournaments"
                         className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm rounded mt-2"
                       >
@@ -325,11 +324,11 @@ function TournamentCard({
       <hr className="border-t border-gray-200" />
 
       <div className="p-4 pt-3">
-        <Link 
+        <Link
           href={`/tournaments/${tournament.id}`}
           className={`block w-full text-center px-4 py-2 rounded text-sm ${
-            isCreator && tournament.status === 'active' 
-              ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+            isCreator && tournament.status === 'active'
+              ? 'bg-blue-500 hover:bg-blue-600 text-white'
               : 'border border-blue-500 text-blue-500 hover:bg-blue-50'
           }`}
         >

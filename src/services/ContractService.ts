@@ -11,17 +11,27 @@ const IS_TESTNET = process.env.NEXT_PUBLIC_NETWORK === 'testnet';
 // Constants for ethers v6
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
+// Define a type for the connector
+interface RoninConnector {
+  provider: unknown;
+  connect: () => Promise<{ account: string; chainId: number }>;
+  getAccounts: () => Promise<string[]>;
+  getChainId: () => Promise<number>;
+  disconnect: () => void;
+  switchChain: (chainId: number) => Promise<void>;
+}
+
 export class ContractService {
   public provider: ethers.BrowserProvider | null = null;
   private signer: ethers.Signer | null = null;
-  private connector: any = null;
+  private connector: RoninConnector | null = null;
 
   constructor() {
     // Provider will be set when connect is called with the connector
   }
 
   // Set the connector from WalletProvider
-  setConnector(connector: any) {
+  setConnector(connector: RoninConnector) {
     this.connector = connector;
     if (connector && connector.provider) {
       this.provider = new ethers.BrowserProvider(connector.provider);

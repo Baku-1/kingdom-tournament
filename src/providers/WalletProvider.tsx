@@ -9,7 +9,7 @@ import {
 import { contractService } from '@/services/ContractService';
 
 interface WalletContextType {
-  connector: any;
+  connector: unknown;
   connectedAddress: string | null;
   userAddresses: string[] | null;
   currentChainId: number | null;
@@ -23,11 +23,12 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [connector, setConnector] = useState<any>(null);
+  const [connector, setConnector] = useState<unknown>(null);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [userAddresses, setUserAddresses] = useState<string[] | null>(null);
   const [currentChainId, setCurrentChainId] = useState<number | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
+  // Error state is used in the context value and for error handling
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

@@ -45,6 +45,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         bool hasEntryFee;
         address entryFeeTokenAddress; // address(0) for native token (RON)
         uint256 entryFeeAmount;
+        bool feesDistributed;         // Track if fees have been distributed
 
         // Positions and rewards
         uint256[] positionRewardAmounts;  // Reward amount for each position
@@ -70,6 +71,8 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
     event TournamentCancelled(uint256 indexed tournamentId);
     event EntryFeesCollected(uint256 indexed tournamentId, address indexed creator, uint256 amount);
     event PlatformFeesWithdrawn(address indexed token, address indexed recipient, uint256 amount);
+    event EntryFeesAutoDistributed(uint256 indexed tournamentId, address indexed creator, uint256 amount);
+    event PlatformFeesAutoDistributed(uint256 indexed tournamentId, address indexed token, address indexed recipient, uint256 amount);
 
     /**
      * @dev Modifier to check if tournament exists and is active
@@ -178,6 +181,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         tournament.rewardTokenAddress = rewardTokenAddress;
         tournament.totalRewardAmount = totalReward;
         tournament.hasEntryFee = false;
+        tournament.feesDistributed = true; // No fees to distribute for tournaments without entry fee
 
         // Store position rewards
         for (uint256 i = 0; i < positionRewardAmounts.length; i++) {
@@ -275,6 +279,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         tournament.hasEntryFee = true;
         tournament.entryFeeTokenAddress = entryFeeTokenAddress;
         tournament.entryFeeAmount = entryFeeAmount;
+        tournament.feesDistributed = false; // Initialize as not distributed
 
         return tournamentId;
     }
@@ -360,10 +365,95 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         tournament.participantCount++;
 
         emit ParticipantRegistered(tournamentId, msg.sender);
+
+        // Check if this is the last registration before the deadline
+        // If we're very close to the registration end time (within 1 hour), auto-distribute fees
+        if (!tournament.feesDistributed &&
+            (block.timestamp + 1 hours >= tournament.registrationEndTime ||
+             (tournament.maxParticipants > 0 && tournament.participantCount == tournament.maxParticipants))) {
+
+            // Distribute fees automatically
+            (uint256 creatorAmount, uint256 platformFeeAmount) = _distributeEntryFees(tournament, tournamentId);
+
+            if (creatorAmount > 0) {
+                emit EntryFeesAutoDistributed(tournamentId, tournament.creator, creatorAmount);
+                emit PlatformFeesAutoDistributed(tournamentId, tournament.entryFeeTokenAddress, owner(), platformFeeAmount);
+            }
+        }
     }
 
     /**
-     * @dev Claim entry fees for a tournament
+     * @dev Internal function to distribute entry fees
+     * @param tournament Tournament storage reference
+     * @param tournamentId The ID of the tournament
+     * @return creatorAmount The amount distributed to the creator
+     * @return platformFeeAmount The amount distributed to the platform owner
+     */
+    function _distributeEntryFees(Tournament storage tournament, uint256 tournamentId) internal returns (uint256, uint256) {
+        // Skip if fees already distributed or tournament doesn't have entry fee
+        if (tournament.feesDistributed || !tournament.hasEntryFee) {
+            return (0, 0);
+        }
+
+        // Calculate total entry fees
+        uint256 totalEntryFees = tournament.participantCount * tournament.entryFeeAmount;
+
+        // Skip if no entry fees to distribute
+        if (totalEntryFees == 0) {
+            tournament.feesDistributed = true;
+            return (0, 0);
+        }
+
+        // Calculate platform fee and creator amount
+        uint256 platformFeeAmount = (totalEntryFees * PLATFORM_FEE_PERCENTAGE) / PERCENTAGE_BASE;
+        uint256 creatorAmount = totalEntryFees - platformFeeAmount;
+
+        address ownerAddress = owner();
+
+        // Transfer creator amount and platform fees directly
+        if (tournament.entryFeeTokenAddress == address(0)) {
+            // Native token (RON)
+            payable(tournament.creator).transfer(creatorAmount);
+            payable(ownerAddress).transfer(platformFeeAmount);
+        } else {
+            // ERC20 token
+            IERC20 token = IERC20(tournament.entryFeeTokenAddress);
+            token.safeTransfer(tournament.creator, creatorAmount);
+            token.safeTransfer(ownerAddress, platformFeeAmount);
+        }
+
+        // Mark fees as distributed
+        tournament.feesDistributed = true;
+
+        return (creatorAmount, platformFeeAmount);
+    }
+
+    /**
+     * @dev Automatically distribute entry fees when registration ends
+     * @param tournamentId The ID of the tournament
+     */
+    function distributeEntryFees(uint256 tournamentId)
+        external
+        nonReentrant
+        tournamentExists(tournamentId)
+    {
+        Tournament storage tournament = tournaments[tournamentId];
+
+        // Check if registration period has ended and tournament is about to start
+        require(block.timestamp > tournament.registrationEndTime, "Registration period not ended yet");
+        require(block.timestamp <= tournament.startTime, "Tournament has already started");
+
+        // Distribute fees
+        (uint256 creatorAmount, uint256 platformFeeAmount) = _distributeEntryFees(tournament, tournamentId);
+
+        if (creatorAmount > 0) {
+            emit EntryFeesAutoDistributed(tournamentId, tournament.creator, creatorAmount);
+            emit PlatformFeesAutoDistributed(tournamentId, tournament.entryFeeTokenAddress, owner(), platformFeeAmount);
+        }
+    }
+
+    /**
+     * @dev Claim entry fees for a tournament (manual method, still available)
      * @param tournamentId The ID of the tournament
      */
     function claimEntryFees(uint256 tournamentId)
@@ -377,36 +467,23 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         // Check if tournament has entry fee
         require(tournament.hasEntryFee, "Tournament does not have entry fee");
 
-        // Calculate total entry fees
-        uint256 totalEntryFees = tournament.participantCount * tournament.entryFeeAmount;
+        // Check if fees have already been distributed
+        require(!tournament.feesDistributed, "Fees already distributed");
 
-        // Skip if no entry fees to claim
-        if (totalEntryFees == 0) {
-            return;
+        // Distribute fees
+        (uint256 creatorAmount, uint256 platformFeeAmount) = _distributeEntryFees(tournament, tournamentId);
+
+        if (creatorAmount > 0) {
+            emit EntryFeesCollected(tournamentId, tournament.creator, creatorAmount);
+            emit PlatformFeesAutoDistributed(tournamentId, tournament.entryFeeTokenAddress, owner(), platformFeeAmount);
         }
-
-        // Calculate platform fee and creator amount
-        uint256 platformFeeAmount = (totalEntryFees * PLATFORM_FEE_PERCENTAGE) / PERCENTAGE_BASE;
-        uint256 creatorAmount = totalEntryFees - platformFeeAmount;
-
-        // Update platform fees
-        platformFees[tournament.entryFeeTokenAddress] += platformFeeAmount;
-
-        // Transfer creator amount
-        if (tournament.entryFeeTokenAddress == address(0)) {
-            // Native token (RON)
-            payable(tournament.creator).transfer(creatorAmount);
-        } else {
-            // ERC20 token
-            IERC20 token = IERC20(tournament.entryFeeTokenAddress);
-            token.safeTransfer(tournament.creator, creatorAmount);
-        }
-
-        emit EntryFeesCollected(tournamentId, tournament.creator, creatorAmount);
     }
 
     /**
      * @dev Withdraw platform fees
+     * @notice This function is mostly for legacy purposes or for withdrawing fees from tournaments
+     * created before the auto-distribution feature was implemented. New tournaments will automatically
+     * distribute platform fees directly to the owner when registration ends.
      * @param tokenAddress Address of the token to withdraw
      */
     function withdrawPlatformFees(address tokenAddress) external onlyOwner nonReentrant {
@@ -591,6 +668,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
             bool hasEntryFee,
             address entryFeeTokenAddress,
             uint256 entryFeeAmount,
+            bool feesDistributed,
             uint256 participantCount
         )
     {
@@ -612,6 +690,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
             tournament.hasEntryFee,
             tournament.entryFeeTokenAddress,
             tournament.entryFeeAmount,
+            tournament.feesDistributed,
             tournament.participantCount
         );
     }

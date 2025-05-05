@@ -288,8 +288,10 @@ function generateDoubleEliminationBrackets(participants: Participant[]): Bracket
  * Get the next available match ID
  * @param brackets Existing brackets
  * @returns Next available match ID
+ *
+ * Note: This function is exported for potential future use in dynamic bracket generation
  */
-function getNextMatchId(brackets: Bracket[]): number {
+export function getNextMatchId(brackets: Bracket[]): number {
   let maxId = 0;
 
   for (const bracket of brackets) {
