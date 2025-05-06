@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/providers/WalletProvider';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { SUPPORTED_GAMES } from '@/config/ronin';
 import { contractService } from '@/services/ContractService';
 import ClaimReward from '@/components/ClaimReward';
@@ -13,7 +13,6 @@ import {
   Match,
   Participant,
   TournamentType,
-  generateBrackets,
   updateBracketsWithResult,
   isTournamentComplete,
   getTournamentChampion
@@ -174,21 +173,20 @@ function SimpleDetail({ label, value }: { label: string; value: string }) {
 }
 
 export default function TournamentDetail() {
-  const { id } = useParams();
+  const params = useParams();
+  const tournamentId = params?.id as string;
   const { connectedAddress, connectWallet } = useWallet();
-  const router = useRouter();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ title: '', message: '', type: '' });
 
   const [tournament, setTournament] = useState<Tournament>(MOCK_TOURNAMENT as Tournament);
   const [isLoading, setIsLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
-  // Using isCreator in conditional rendering below
-  const [isCreator, setIsCreator] = useState(true); // Set to true for testing
+  const [isCreator, setIsCreator] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [reportedWinner, setReportedWinner] = useState('');
-  const [activeTab, setActiveTab] = useState<'overview' | 'brackets' | 'participants' | 'admin'>('brackets'); // Start on brackets tab
+  const [activeTab, setActiveTab] = useState<'overview' | 'brackets' | 'participants' | 'admin'>('brackets');
 
   // Simple toast function
   const displayToast = (title: string, message: string, type: string) => {
@@ -201,7 +199,7 @@ export default function TournamentDetail() {
   useEffect(() => {
     const fetchTournamentData = async () => {
       try {
-        if (!id) return;
+        if (!tournamentId) return;
 
         setIsLoading(true);
 
@@ -227,7 +225,7 @@ export default function TournamentDetail() {
         // Uncomment the following code to fetch data from the contract
         /*
         // Fetch tournament data from the contract
-        const tournamentData = await contractService.getTournamentInfo(id as string);
+        const tournamentData = await contractService.getTournamentInfo(tournamentId);
 
         // Format the data to match our Tournament type
         const formattedTournament = {
@@ -282,7 +280,7 @@ export default function TournamentDetail() {
         // Fetch participants using events (more efficient)
         try {
           if (contractService.provider) {
-            const participants = await contractService.getParticipantsFromEvents(id as string, contractService.provider);
+            const participants = await contractService.getParticipantsFromEvents(tournamentId, contractService.provider);
             formattedTournament.participants = participants;
 
             // Check if the connected user is registered
@@ -302,7 +300,7 @@ export default function TournamentDetail() {
           // Fallback: Check if the current user is registered
           if (connectedAddress) {
             try {
-              const isUserRegistered = await contractService.isParticipantRegistered(id as string, connectedAddress);
+              const isUserRegistered = await contractService.isParticipantRegistered(tournamentId, connectedAddress);
               setIsRegistered(isUserRegistered);
 
               // If registered, add to participants list
@@ -333,7 +331,7 @@ export default function TournamentDetail() {
     };
 
     fetchTournamentData();
-  }, [id, connectedAddress]);
+  }, [tournamentId, connectedAddress]);
 
   // Format date for display
   const formatDate = (date: Date) => {
@@ -395,13 +393,13 @@ export default function TournamentDetail() {
         // Register with entry fee
         // The contract handles the fee distribution (97.5% to creator, 2.5% to platform)
         await contractService.registerWithEntryFee(
-          id as string,
+          tournamentId,
           tournament.entryFeeTokenAddress || '0x0000000000000000000000000000000000000000',
           tournament.entryFeeAmount
         );
       } else {
         // No entry fee, just register
-        await contractService.registerForTournament(id as string);
+        await contractService.registerForTournament(tournamentId);
       }
 
       // Update local state to reflect registration
@@ -607,7 +605,7 @@ export default function TournamentDetail() {
           await contractService.connect();
 
           // Declare the winner for this match position
-          await contractService.declareWinner(id as string, selectedMatch.position, winnerAddress);
+          await contractService.declareWinner(tournamentId, selectedMatch.position, winnerAddress);
 
           displayToast(
             'Winner Declared',
@@ -646,7 +644,6 @@ export default function TournamentDetail() {
       }
 
       // Update tournament state with a timestamp to force a complete re-render
-      // Use a small delay to ensure all operations are complete
       setTimeout(() => {
         setTournament(prevTournament => ({
           ...prevTournament,
@@ -664,7 +661,7 @@ export default function TournamentDetail() {
           setTournament({
             ...tournament,
             brackets: updatedBrackets,
-            status: 'completed' as 'completed'
+            status: 'completed' as const
           });
 
           // If this is a real tournament (not mock data), finalize on the contract
@@ -684,7 +681,7 @@ export default function TournamentDetail() {
               }
 
               // Finalize the tournament by declaring all winners at once
-              await contractService.finalizeTournament(id as string, winnersByPosition);
+              await contractService.finalizeTournament(tournamentId, winnersByPosition);
 
               displayToast(
                 'Tournament Finalized',
@@ -932,7 +929,7 @@ export default function TournamentDetail() {
                   {tournament.status === 'completed' && (
                     <div className="mt-6">
                       <ClaimReward
-                        tournamentId={id as string}
+                        tournamentId={tournamentId}
                         onSuccess={() => {
                           displayToast(
                             'Reward claimed!',
@@ -954,7 +951,7 @@ export default function TournamentDetail() {
               {tournament.status === 'registration' ? (
                 <div className="flex items-center justify-center min-h-[200px]">
                   <BracketGenerator
-                    tournamentId={id as string}
+                    tournamentId={tournamentId}
                     participants={tournament.participants}
                     registrationEndTime={new Date(tournament.registrationEndDate)}
                     tournamentType={tournament.tournamentType}
@@ -963,7 +960,7 @@ export default function TournamentDetail() {
                       setTournament({
                         ...tournament,
                         brackets: generatedBrackets,
-                        status: 'active' as 'active'
+                        status: 'active' as const
                       });
                     }}
                   />
@@ -978,7 +975,7 @@ export default function TournamentDetail() {
                           <h3 className="font-medium text-cyber-primary">Match Results Needed</h3>
                           <p className="text-cyber-text-secondary text-sm">
                             {getPendingMatchesCount()} {getPendingMatchesCount() === 1 ? 'match needs' : 'matches need'} results.
-                            Click the "Report Result" button below each match to record the winner.
+                            Click the &quot;Report Result&quot; button below each match to record the winner.
                           </p>
                         </div>
                       </div>
@@ -990,7 +987,6 @@ export default function TournamentDetail() {
                     tournamentType={tournament.tournamentType as TournamentType}
                     onReportMatch={handleReportMatch}
                     connectedAddress={connectedAddress}
-                    isCreator={isCreator}
                   />
                 </>
               )}
@@ -1096,12 +1092,12 @@ export default function TournamentDetail() {
                             await contractService.connect();
 
                             // Finalize the tournament by declaring all winners at once
-                            await contractService.finalizeTournament(id as string, winnersByPosition);
+                            await contractService.finalizeTournament(tournamentId, winnersByPosition);
 
                             // Update tournament status
                             setTournament({
                               ...tournament,
-                              status: 'completed' as 'completed'
+                              status: 'completed' as const
                             });
 
                             displayToast(

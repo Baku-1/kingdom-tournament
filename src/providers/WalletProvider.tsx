@@ -8,8 +8,22 @@ import {
 } from '@sky-mavis/tanto-connect';
 import { contractService } from '@/services/ContractService';
 
+// Define a type for the connector that matches ContractService's requirements
+interface RoninConnector {
+  provider: {
+    request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+    on: (event: string, listener: (...args: unknown[]) => void) => void;
+    removeListener: (event: string, listener: (...args: unknown[]) => void) => void;
+  };
+  connect: () => Promise<{ account: string; chainId: number }>;
+  getAccounts: () => Promise<string[]>;
+  getChainId: () => Promise<number>;
+  disconnect: () => void;
+  switchChain: (chainId: number) => Promise<void>;
+}
+
 interface WalletContextType {
-  connector: unknown;
+  connector: RoninConnector | null;
   connectedAddress: string | null;
   userAddresses: string[] | null;
   currentChainId: number | null;
@@ -23,7 +37,7 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [connector, setConnector] = useState<unknown>(null);
+  const [connector, setConnector] = useState<RoninConnector | null>(null);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [userAddresses, setUserAddresses] = useState<string[] | null>(null);
   const [currentChainId, setCurrentChainId] = useState<number | null>(null);
@@ -34,29 +48,30 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeConnector = async () => {
       try {
-        const connector = await requestRoninWalletConnector();
-        setConnector(connector);
+        const newConnector = await requestRoninWalletConnector();
+        // Cast to RoninConnector since we know it implements the required interface
+        setConnector(newConnector as unknown as RoninConnector);
 
         // Set the connector in the ContractService
-        contractService.setConnector(connector);
+        contractService.setConnector(newConnector as unknown as RoninConnector);
 
         // Check if already connected
         try {
-          const accounts = await connector.getAccounts();
+          const accounts = await newConnector.getAccounts();
           if (accounts && accounts.length > 0) {
             setConnectedAddress(accounts[0]);
             setUserAddresses(accounts);
 
             // Get current chain
-            const chainId = await connector.getChainId();
+            const chainId = await newConnector.getChainId();
             setCurrentChainId(chainId);
           }
-        } catch (error) {
+        } catch {
           // Not connected, which is fine
         }
-      } catch (error) {
-        if (error instanceof ConnectorError) {
-          setError(error.name);
+      } catch (err) {
+        if (err instanceof ConnectorError) {
+          setError(err.name);
         }
       }
     };
@@ -75,7 +90,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const connectResult = await connector?.connect();
+      if (!connector) {
+        throw new Error("No connector available");
+      }
+
+      const connectResult = await connector.connect();
       if (connectResult) {
         setConnectedAddress(connectResult.account);
         setCurrentChainId(connectResult.chainId);
@@ -84,12 +103,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         contractService.setConnector(connector);
       }
 
-      const accounts = await connector?.getAccounts();
+      const accounts = await connector.getAccounts();
       if (accounts) {
         setUserAddresses(accounts);
       }
-    } catch (error) {
-      console.error("Error connecting wallet:", error);
+    } catch (err) {
+      console.error("Error connecting wallet:", err);
       setError("Failed to connect wallet");
     } finally {
       setIsConnecting(false);
@@ -100,8 +119,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (connector) {
       try {
         connector.disconnect();
-      } catch (error) {
-        console.error("Error disconnecting wallet:", error);
+      } catch (err) {
+        console.error("Error disconnecting wallet:", err);
       }
     }
 
@@ -111,11 +130,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   };
 
   const switchChain = async (chainId: number) => {
+    if (!connector) {
+      throw new Error("No connector available");
+    }
+
     try {
-      await connector?.switchChain(chainId);
+      await connector.switchChain(chainId);
       setCurrentChainId(chainId);
-    } catch (error) {
-      console.error("Error switching chain:", error);
+    } catch (err) {
+      console.error("Error switching chain:", err);
       setError("Failed to switch chain");
     }
   };

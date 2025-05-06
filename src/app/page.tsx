@@ -51,17 +51,14 @@ export default function Home() {
             <Feature
               title="DEPLOY ARENA"
               description="Establish your digital battleground on the Ronin blockchain with customizable brackets and high-stakes rewards."
-              icon="/icons/create.svg"
             />
             <Feature
               title="ENTER COMBAT"
               description="Connect your Ronin wallet to join the fray and test your skills against elite cyber warriors."
-              icon="/icons/compete.svg"
             />
             <Feature
               title="CLAIM VICTORY"
               description="Conquer your opponents and receive automatic token or NFT rewards directly to your digital arsenal."
-              icon="/icons/reward.svg"
             />
           </div>
         </div>
@@ -70,11 +67,10 @@ export default function Home() {
   );
 }
 
-function Feature({ title, description, icon }: { title: string; description: string; icon: string }) {
+function Feature({ title, description }: { title: string; description: string }) {
   return (
     <div className="flex flex-col items-center p-8 bg-cyber-bg-light border border-cyber-primary shadow-md rounded-lg max-w-sm space-y-4 glow-border">
       <div className="p-2 rounded-full" style={{ background: 'rgba(0, 240, 255, 0.1)' }}>
-        {/* Placeholder for icon - replace with actual icons later */}
         <div className="w-12 h-12 rounded-full" style={{ background: 'var(--cyber-gradient-primary)' }}></div>
       </div>
       <h3 className="text-lg font-medium" style={{ fontFamily: 'var(--font-orbitron)' }}>

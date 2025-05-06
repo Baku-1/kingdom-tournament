@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Bracket, Match, Participant, TournamentType } from '@/utils/bracketUtils';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Bracket, Participant, TournamentType } from '@/utils/bracketUtils';
 
 interface BracketGeneratorProps {
   tournamentId: string;
@@ -10,7 +10,6 @@ interface BracketGeneratorProps {
 }
 
 export default function BracketGenerator({
-  tournamentId,
   participants,
   registrationEndTime,
   tournamentType = 'single-elimination',
@@ -20,6 +19,41 @@ export default function BracketGenerator({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string>('');
+
+  // Generate brackets based on number of participants
+  const generateBrackets = useCallback(async () => {
+    if (isGenerating || isGenerated) return;
+
+    setIsGenerating(true);
+
+    try {
+      // Get the number of participants
+      const numParticipants = participants.length;
+
+      if (numParticipants < 2) {
+        console.error('Not enough participants to generate brackets');
+        setIsGenerating(false);
+        return;
+      }
+
+      // Import the bracket generation function from utils
+      const { generateBrackets } = await import('@/utils/bracketUtils');
+
+      // Generate brackets using the utility function
+      const generatedBrackets = generateBrackets(participants, tournamentType);
+
+      setBrackets(generatedBrackets);
+      setIsGenerated(true);
+
+      // Call the callback with the generated brackets
+      onBracketsGenerated(generatedBrackets);
+
+    } catch (error) {
+      console.error('Error generating brackets:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [isGenerating, isGenerated, participants, tournamentType, onBracketsGenerated]);
 
   // Calculate time remaining until registration ends
   useEffect(() => {
@@ -60,42 +94,7 @@ export default function BracketGenerator({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [registrationEndTime, isGenerated, participants]);
-
-  // Generate brackets based on number of participants
-  const generateBrackets = async () => {
-    if (isGenerating || isGenerated) return;
-
-    setIsGenerating(true);
-
-    try {
-      // Get the number of participants
-      const numParticipants = participants.length;
-
-      if (numParticipants < 2) {
-        console.error('Not enough participants to generate brackets');
-        setIsGenerating(false);
-        return;
-      }
-
-      // Import the bracket generation function from utils
-      const { generateBrackets } = await import('@/utils/bracketUtils');
-
-      // Generate brackets using the utility function
-      const generatedBrackets = generateBrackets(participants, tournamentType);
-
-      setBrackets(generatedBrackets);
-      setIsGenerated(true);
-
-      // Call the callback with the generated brackets
-      onBracketsGenerated(generatedBrackets);
-
-    } catch (error) {
-      console.error('Error generating brackets:', error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  }, [registrationEndTime, isGenerated, participants, generateBrackets]);
 
   // Force generate brackets (for testing or admin override)
   const handleForceGenerate = () => {

@@ -1,20 +1,17 @@
 import React from 'react';
-import { Bracket, Match, Participant, TournamentType, isTournamentComplete, getTournamentChampion } from '@/utils/bracketUtils';
+import { Bracket, Match, TournamentType, isTournamentComplete, getTournamentChampion } from '@/utils/bracketUtils';
 
 interface TournamentBracketViewProps {
   brackets: Bracket[];
   tournamentType: TournamentType;
   onReportMatch?: (match: Match) => void;
   connectedAddress?: string | null;
-  isCreator?: boolean;
 }
 
 export default function TournamentBracketView({
   brackets,
   tournamentType,
   onReportMatch,
-  connectedAddress,
-  isCreator = false
 }: TournamentBracketViewProps) {
   // Group brackets by type
   const winnersBrackets = brackets.filter(b => b.bracketType === 'winners').sort((a, b) => a.round - b.round);

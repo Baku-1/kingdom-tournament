@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/providers/WalletProvider';
 import Link from 'next/link';
-import Image from 'next/image';
 import { SUPPORTED_GAMES } from '@/config/ronin';
 
 // Mock data for tournaments
@@ -75,16 +74,12 @@ const MOCK_TOURNAMENTS = [
 
 export default function Tournaments() {
   const { connectedAddress } = useWallet();
-  const [tournaments, setTournaments] = useState(MOCK_TOURNAMENTS);
+  const [tournaments] = useState(MOCK_TOURNAMENTS);
   const [filteredTournaments, setFilteredTournaments] = useState(MOCK_TOURNAMENTS);
   const [searchTerm, setSearchTerm] = useState('');
   const [gameFilter, setGameFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-
-  // Use static values instead of useColorModeValue
-  const cardBg = 'white';
-  const borderColor = 'gray-200';
 
   // Simulate loading data
   useEffect(() => {

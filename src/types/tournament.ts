@@ -25,6 +25,7 @@ export interface Tournament {
   hasEntryFee: boolean;
   entryFeeAmount: string;
   entryFeeToken: string;
+  entryFeeTokenAddress?: string;
   brackets: Bracket[];
   lastUpdated?: number; // Timestamp to force React to detect changes
 }

@@ -52,7 +52,7 @@ export const ERC20_ABI = [
 
 // Helper function to get contract instance
 export function getTournamentEscrowContract(
-  provider: ethers.providers.Web3Provider | ethers.providers.JsonRpcProvider,
+  provider: ethers.BrowserProvider | ethers.JsonRpcProvider,
   isTestnet: boolean = false
 ) {
   const address = isTestnet ?
@@ -69,7 +69,7 @@ export function getTournamentEscrowContract(
 // Helper function to get ERC20 token contract
 export function getERC20Contract(
   tokenAddress: string,
-  provider: ethers.providers.Web3Provider | ethers.providers.JsonRpcProvider
+  provider: ethers.BrowserProvider | ethers.JsonRpcProvider
 ) {
   return new ethers.Contract(
     tokenAddress,

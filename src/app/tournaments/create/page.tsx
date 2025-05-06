@@ -6,6 +6,19 @@ import { useRouter } from 'next/navigation';
 import { SUPPORTED_GAMES, TOURNAMENT_TYPES } from '@/config/ronin';
 import { contractService } from '@/services/ContractService';
 
+type TokenBalances = {
+  RON: string;
+  AXS: string;
+  SLP: string;
+  USDC: string;
+};
+
+type TokenType = keyof TokenBalances;
+
+type TokenAddresses = {
+  [K in TokenType]: string;
+};
+
 export default function CreateTournament() {
   const { connectedAddress, connectWallet } = useWallet();
   const router = useRouter();
@@ -21,13 +34,13 @@ export default function CreateTournament() {
   const [registrationEndDate, setRegistrationEndDate] = useState('');
   const [rewardType, setRewardType] = useState('token');
   const [tokenAddress, setTokenAddress] = useState('');
-  const [selectedToken, setSelectedToken] = useState('RON');
+  const [selectedToken, setSelectedToken] = useState<TokenType>('RON');
   const [tokenAmount, setTokenAmount] = useState('');
   const [nftAddress, setNftAddress] = useState('');
   const [nftId, setNftId] = useState('');
 
   // Mock wallet token balances (in a real app, these would be fetched from the blockchain)
-  const [walletBalances, setWalletBalances] = useState({
+  const [walletBalances] = useState<TokenBalances>({
     RON: '1000',
     AXS: '50',
     SLP: '10000',
@@ -128,8 +141,8 @@ export default function CreateTournament() {
   // Update token address based on selected token
   useEffect(() => {
     // Token addresses from Ronin blockchain
-    const tokenAddresses = {
-      RON: connectedAddress, // RON is the native token, so we use the wallet address
+    const tokenAddresses: TokenAddresses = {
+      RON: connectedAddress || '', // RON is the native token, so we use the wallet address
       AXS: '0x97a9107c1793bc407d6f527b77e7fff4d812bece', // AXS token on Ronin
       SLP: '0xa8754b9fa15fc18bb59458815510e40a12cd2014', // SLP token on Ronin
       USDC: '0x0b7007c13325c48911f73a2dad5fa5dcbf808adc', // USDC token on Ronin
@@ -242,8 +255,6 @@ export default function CreateTournament() {
                 {TOURNAMENT_TYPES.find((type) => type.id === tournamentType)?.description}
               </p>
             </div>
-
-
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -419,7 +430,7 @@ export default function CreateTournament() {
                     <div className="grid grid-cols-1 gap-2">
                       <select
                         value={selectedToken}
-                        onChange={(e) => setSelectedToken(e.target.value)}
+                        onChange={(e) => setSelectedToken(e.target.value as TokenType)}
                         className="w-full p-2 border border-gray-300 rounded"
                         required
                       >
@@ -495,7 +506,7 @@ export default function CreateTournament() {
                     </p>
                   </div>
                 </div>
-            )}
+              )}
 
               <div className="mt-4">
                 <label className="flex items-center">
@@ -583,7 +594,7 @@ export default function CreateTournament() {
                       ' (Must equal 100%)'}
                   </p>
                 </div>
-            )}
+              )}
 
               <button
                 type="submit"

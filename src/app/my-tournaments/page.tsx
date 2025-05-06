@@ -59,11 +59,34 @@ const MOCK_JOINED_TOURNAMENTS = [
   },
 ];
 
+interface GameInfo {
+  id: string;
+  name: string;
+  image: string;
+}
+
+interface Tournament {
+  id: string;
+  name: string;
+  description: string;
+  game: string;
+  creator: string;
+  tournamentType: string;
+  maxParticipants: number;
+  currentParticipants: number;
+  startDate: Date;
+  registrationEndDate: Date;
+  status: string;
+  rewardType: string;
+  rewardAmount?: string;
+  rewardToken?: string;
+  rewardNftName?: string;
+}
+
 export default function MyTournaments() {
   const { connectedAddress, connectWallet } = useWallet();
-  // Remove unused router import
-  const [createdTournaments, _setCreatedTournaments] = useState(MOCK_CREATED_TOURNAMENTS);
-  const [joinedTournaments, _setJoinedTournaments] = useState(MOCK_JOINED_TOURNAMENTS);
+  const [createdTournaments] = useState(MOCK_CREATED_TOURNAMENTS);
+  const [joinedTournaments] = useState(MOCK_JOINED_TOURNAMENTS);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('created');
 
@@ -180,7 +203,7 @@ export default function MyTournaments() {
                 {createdTournaments.length === 0 ? (
                   <div className="flex items-center justify-center min-h-[200px] bg-white p-6 border border-gray-200 rounded-md">
                     <div className="flex flex-col items-center">
-                      <p>You haven't created any tournaments yet</p>
+                      <p>You haven&apos;t created any tournaments yet</p>
                       <Link
                         href="/tournaments/create"
                         className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm rounded mt-2"
@@ -216,7 +239,7 @@ export default function MyTournaments() {
                 {joinedTournaments.length === 0 ? (
                   <div className="flex items-center justify-center min-h-[200px] bg-white p-6 border border-gray-200 rounded-md">
                     <div className="flex flex-col items-center">
-                      <p>You haven't joined any tournaments yet</p>
+                      <p>You haven&apos;t joined any tournaments yet</p>
                       <Link
                         href="/tournaments"
                         className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm rounded mt-2"
@@ -256,10 +279,10 @@ function TournamentCard({
   getGameInfo,
   isCreator,
 }: {
-  tournament: any;
+  tournament: Tournament;
   formatDate: (date: Date) => string;
   getStatusColor: (status: string) => string;
-  getGameInfo: (gameId: string) => any;
+  getGameInfo: (gameId: string) => GameInfo;
   isCreator: boolean;
 }) {
   return (

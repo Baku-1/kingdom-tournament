@@ -13,7 +13,11 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 // Define a type for the connector
 interface RoninConnector {
-  provider: unknown;
+  provider: {
+    request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+    on: (event: string, listener: (...args: unknown[]) => void) => void;
+    removeListener: (event: string, listener: (...args: unknown[]) => void) => void;
+  };
   connect: () => Promise<{ account: string; chainId: number }>;
   getAccounts: () => Promise<string[]>;
   getChainId: () => Promise<number>;
@@ -177,7 +181,7 @@ export class ContractService {
     const receipt = await tx.wait();
 
     // Find tournament ID from event
-    const event = receipt.logs.find(log => {
+    const event = receipt.logs.find((log: ethers.Log) => {
       const parsedLog = contract.interface.parseLog(log);
       return parsedLog?.name === 'TournamentCreated';
     });
@@ -291,7 +295,7 @@ export class ContractService {
     const receipt = await tx.wait();
 
     // Check for successful registration event
-    const event = receipt.logs.find(log => {
+    const event = receipt.logs.find((log: ethers.Log) => {
       const parsedLog = contract.interface.parseLog(log);
       return parsedLog?.name === 'ParticipantRegistered';
     });
@@ -332,7 +336,7 @@ export class ContractService {
       const receipt = await tx.wait();
 
       // Check for successful registration event
-      const event = receipt.logs.find(log => {
+      const event = receipt.logs.find((log: ethers.Log) => {
         const parsedLog = contract.interface.parseLog(log);
         return parsedLog?.name === 'ParticipantRegistered';
       });
@@ -350,7 +354,7 @@ export class ContractService {
       const receipt = await tx.wait();
 
       // Check for successful registration event
-      const event = receipt.logs.find(log => {
+      const event = receipt.logs.find((log: ethers.Log) => {
         const parsedLog = contract.interface.parseLog(log);
         return parsedLog?.name === 'ParticipantRegistered';
       });
@@ -391,7 +395,7 @@ export class ContractService {
       entryFeeTokenAddress: info.entryFeeTokenAddress,
       entryFeeAmount: info.entryFeeAmount ? ethers.formatUnits(info.entryFeeAmount, 18) : '0',
       participantCount: Number(info.participantCount),
-      positionRewardAmounts: positionRewardAmounts.map(amount =>
+      positionRewardAmounts: positionRewardAmounts.map((amount: bigint) =>
         ethers.formatUnits(amount, 18)
       )
     };
@@ -446,15 +450,17 @@ export class ContractService {
   async getParticipantsFromEvents(tournamentId: string, provider: ethers.BrowserProvider) {
     const contract = this.getTournamentEscrowContract();
 
-    // Create a filter for ParticipantRegistered events for this tournament
-    const filter = contract.filters.ParticipantRegistered(tournamentId);
-
     // Get the events
+    const eventTopic = contract.interface.getEvent('ParticipantRegistered')?.topicHash;
+    if (!eventTopic) {
+      throw new Error('Could not find ParticipantRegistered event topic');
+    }
+
     const events = await provider.getLogs({
       fromBlock: 0,
       toBlock: 'latest',
-      address: contract.address,
-      topics: filter.topics as string[]
+      address: contract.target as string,
+      topics: [eventTopic, tournamentId]
     });
 
     // Parse the events to get participant addresses

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/providers/WalletProvider';
 import { contractService } from '@/services/ContractService';
-import { ethers } from 'ethers';
 
 interface ClaimRewardProps {
   tournamentId: string;
@@ -178,7 +177,7 @@ export default function ClaimReward({ tournamentId, onSuccess }: ClaimRewardProp
       )}
 
       {claimablePositions.length === 0 ? (
-        <p className="text-cyber-text-secondary">You don't have any rewards to claim for this tournament.</p>
+        <p className="text-cyber-text-secondary">You don&apos;t have any rewards to claim for this tournament.</p>
       ) : (
         <div className="space-y-4">
           <p className="text-cyber-text-primary">You have the following rewards available to claim:</p>
