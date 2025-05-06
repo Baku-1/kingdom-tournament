@@ -1,29 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// UPGRADEABLE IMPORTS
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /**
- * @title TournamentEscrowV2
- * @dev Improved version of TournamentEscrow with additional validations and features
+ * @title TournamentEscrowV2 (Upgradeable)
+ * @dev Upgradeable version of TournamentEscrowV2 using UUPS pattern.
  */
-contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
-    using SafeERC20 for IERC20;
+contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+    // UPGRADEABLE LIBRARY USAGE
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    // Tournament types
+    // Tournament types (Constants are fine)
     uint8 public constant TOURNAMENT_TYPE_SINGLE_ELIMINATION = 0;
     uint8 public constant TOURNAMENT_TYPE_DOUBLE_ELIMINATION = 1;
 
-    // Platform fee percentage (2.5%)
+    // Platform fee percentage (Constants are fine)
     uint256 public constant PLATFORM_FEE_PERCENTAGE = 250; // 2.5% = 250 / 10000
     uint256 public constant PERCENTAGE_BASE = 10000; // 100% = 10000
 
-    // Minimum time requirements
+    // Minimum time requirements (Constants are fine)
     uint256 public constant MIN_REGISTRATION_PERIOD = 1 hours;
 
+    // Struct definition remains the same
     struct Tournament {
         uint256 id;
         address creator;
@@ -57,13 +62,16 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         mapping(address => bool) participants;
     }
 
+    // Mappings remain the same
     mapping(uint256 => Tournament) public tournaments;
-    uint256 public nextTournamentId = 1;
 
-    // Platform fees collected
+    // State variable - initialization moved to initializer
+    uint256 public nextTournamentId;
+
+    // Platform fees collected (Mapping remains the same)
     mapping(address => uint256) public platformFees;
 
-    // Events
+    // Events remain the same
     event TournamentCreated(uint256 indexed tournamentId, address indexed creator, string name);
     event ParticipantRegistered(uint256 indexed tournamentId, address indexed participant);
     event WinnerDeclared(uint256 indexed tournamentId, uint256 position, address winner);
@@ -74,47 +82,63 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
     event EntryFeesAutoDistributed(uint256 indexed tournamentId, address indexed creator, uint256 amount);
     event PlatformFeesAutoDistributed(uint256 indexed tournamentId, address indexed token, address indexed recipient, uint256 amount);
 
+    // --- INITIALIZATION ---
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers(); // Prevents implementation contract from being initialized
+    }
+
     /**
-     * @dev Modifier to check if tournament exists and is active
-     * @param tournamentId The ID of the tournament
+     * @dev Initializes the contract setting the deployer as the initial owner.
+     * Called only once by the proxy contract upon deployment.
      */
+    function initialize() public initializer {
+        __Ownable_init(); // Initializes OwnableUpgradeable, setting msg.sender as owner
+        __ReentrancyGuard_init(); // Initializes ReentrancyGuardUpgradeable
+        __UUPSUpgradeable_init(); // Initializes UUPSUpgradeable
+
+        // Initialize state variables previously initialized at declaration
+        nextTournamentId = 1;
+    }
+
+    // --- UUPS UPGRADE AUTHORIZATION ---
+
+    /**
+     * @dev Authorizes the upgrade process. Only the owner can authorize an upgrade.
+     * Required by UUPSUpgradeable.
+     */
+    function _authorizeUpgrade(address newImplementation)
+        internal
+        override
+        onlyOwner // Modifier from OwnableUpgradeable
+    {}
+
+    // --- MODIFIERS ---
+    // Modifiers remain the same, relying on inherited contracts and mappings
+
     modifier tournamentExists(uint256 tournamentId) {
         require(tournaments[tournamentId].id == tournamentId, "Tournament does not exist");
         _;
     }
 
-    /**
-     * @dev Modifier to check if tournament is active
-     * @param tournamentId The ID of the tournament
-     */
     modifier tournamentActive(uint256 tournamentId) {
         require(tournaments[tournamentId].isActive, "Tournament not active");
         _;
     }
 
-    /**
-     * @dev Modifier to check if sender is the tournament creator
-     * @param tournamentId The ID of the tournament
-     */
     modifier onlyTournamentCreator(uint256 tournamentId) {
         require(msg.sender == tournaments[tournamentId].creator, "Not tournament creator");
         _;
     }
 
+    // --- CORE LOGIC ---
+    // Internal functions and external functions remain largely the same,
+    // EXCEPT for updating type hints for IERC20.
+
     /**
      * @dev Internal function to create a tournament
-     * @param name Tournament name
-     * @param description Tournament description
-     * @param gameId Game identifier
-     * @param tournamentType Type of tournament (0=single elimination, 1=double elimination)
-     * @param maxParticipants Maximum number of participants (0 for unlimited)
-     * @param registrationEndTime Time when registration ends
-     * @param startTime Time when tournament starts
-     * @param rewardTokenAddress Address of reward token (address(0) for native token)
-     * @param positionRewardAmounts Reward amounts for each position
-     * @param msgSender Address of the tournament creator
-     * @param msgValue Amount of native tokens sent with the transaction
-     * @return tournamentId The ID of the created tournament
+     * (Updated IERC20 type hint)
      */
     function _createTournament(
         string memory name,
@@ -129,7 +153,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         address msgSender,
         uint256 msgValue
     ) internal returns (uint256) {
-        // Validate inputs
+        // Validations remain the same
         require(bytes(name).length > 0, "Name cannot be empty");
         require(tournamentType <= TOURNAMENT_TYPE_DOUBLE_ELIMINATION, "Invalid tournament type");
         require(positionRewardAmounts.length > 0, "No positions provided");
@@ -142,23 +166,19 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
             totalReward += positionRewardAmounts[i];
         }
 
-        // Handle token or native currency
         if (rewardTokenAddress == address(0)) {
-            // Native token (RON)
             require(msgValue == totalReward, "Incorrect reward amount sent");
         } else {
-            // ERC20 token
             require(msgValue == 0, "Don't send RON with token tournaments");
-
-            // Check if token contract exists
             uint256 codeSize;
+            address tokenAddr = rewardTokenAddress; // Assign to local variable for assembly
             assembly {
-                codeSize := extcodesize(rewardTokenAddress)
+                codeSize := extcodesize(tokenAddr)
             }
             require(codeSize > 0, "Token address is not a contract");
 
-            // Transfer tokens to this contract
-            IERC20 token = IERC20(rewardTokenAddress);
+            // *** UPDATED TYPE HINT ***
+            IERC20Upgradeable token = IERC20Upgradeable(rewardTokenAddress);
             uint256 balanceBefore = token.balanceOf(address(this));
             token.safeTransferFrom(msgSender, address(this), totalReward);
             uint256 balanceAfter = token.balanceOf(address(this));
@@ -170,6 +190,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         tournament.id = tournamentId;
         tournament.creator = msgSender;
         tournament.name = name;
+        // ... rest of tournament setup remains the same ...
         tournament.description = description;
         tournament.gameId = gameId;
         tournament.tournamentType = tournamentType;
@@ -181,9 +202,8 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         tournament.rewardTokenAddress = rewardTokenAddress;
         tournament.totalRewardAmount = totalReward;
         tournament.hasEntryFee = false;
-        tournament.feesDistributed = true; // No fees to distribute for tournaments without entry fee
+        tournament.feesDistributed = true;
 
-        // Store position rewards
         for (uint256 i = 0; i < positionRewardAmounts.length; i++) {
             tournament.positionRewardAmounts.push(positionRewardAmounts[i]);
         }
@@ -194,16 +214,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
 
     /**
      * @dev Create a tournament with escrowed rewards
-     * @param name Tournament name
-     * @param description Tournament description
-     * @param gameId Game identifier
-     * @param tournamentType Type of tournament (0=single elimination, 1=double elimination)
-     * @param maxParticipants Maximum number of participants (0 for unlimited)
-     * @param registrationEndTime Time when registration ends
-     * @param startTime Time when tournament starts
-     * @param rewardTokenAddress Address of reward token (address(0) for native token)
-     * @param positionRewardAmounts Reward amounts for each position
-     * @return tournamentId The ID of the created tournament
+     * (Uses nonReentrant from ReentrancyGuardUpgradeable)
      */
     function createTournament(
         string memory name,
@@ -215,7 +226,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         uint256 startTime,
         address rewardTokenAddress,
         uint256[] memory positionRewardAmounts
-    ) external payable nonReentrant returns (uint256) {
+    ) external payable virtual nonReentrant returns (uint256) { // Added 'virtual' for potential future overrides
         return _createTournament(
             name,
             description,
@@ -226,25 +237,14 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
             startTime,
             rewardTokenAddress,
             positionRewardAmounts,
-            msg.sender,
+            _msgSender(), // Use OZ upgradeable context-aware sender
             msg.value
         );
     }
 
-    /**
+     /**
      * @dev Create a tournament with entry fee
-     * @param name Tournament name
-     * @param description Tournament description
-     * @param gameId Game identifier
-     * @param tournamentType Type of tournament (0=single elimination, 1=double elimination)
-     * @param maxParticipants Maximum number of participants (0 for unlimited)
-     * @param registrationEndTime Time when registration ends
-     * @param startTime Time when tournament starts
-     * @param rewardTokenAddress Address of reward token (address(0) for native token)
-     * @param positionRewardAmounts Reward amounts for each position
-     * @param entryFeeTokenAddress Address of entry fee token (address(0) for native token)
-     * @param entryFeeAmount Amount of entry fee
-     * @return tournamentId The ID of the created tournament
+     * (Uses nonReentrant from ReentrancyGuardUpgradeable)
      */
     function createTournamentWithEntryFee(
         string memory name,
@@ -258,8 +258,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         uint256[] memory positionRewardAmounts,
         address entryFeeTokenAddress,
         uint256 entryFeeAmount
-    ) external payable nonReentrant returns (uint256) {
-        // Create the tournament first
+    ) external payable virtual nonReentrant returns (uint256) { // Added 'virtual'
         uint256 tournamentId = _createTournament(
             name,
             description,
@@ -270,111 +269,91 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
             startTime,
             rewardTokenAddress,
             positionRewardAmounts,
-            msg.sender,
+             _msgSender(), // Use OZ upgradeable context-aware sender
             msg.value
         );
 
-        // Add entry fee information
         Tournament storage tournament = tournaments[tournamentId];
         tournament.hasEntryFee = true;
         tournament.entryFeeTokenAddress = entryFeeTokenAddress;
         tournament.entryFeeAmount = entryFeeAmount;
-        tournament.feesDistributed = false; // Initialize as not distributed
+        tournament.feesDistributed = false;
 
         return tournamentId;
     }
 
     /**
      * @dev Register for a tournament without entry fee
-     * @param tournamentId The ID of the tournament
+     * (Uses nonReentrant from ReentrancyGuardUpgradeable)
      */
     function registerForTournament(uint256 tournamentId)
         external
+        virtual // Added 'virtual'
         nonReentrant
         tournamentExists(tournamentId)
         tournamentActive(tournamentId)
     {
         Tournament storage tournament = tournaments[tournamentId];
-
-        // Check registration period
         require(block.timestamp <= tournament.registrationEndTime, "Registration period ended");
-
-        // Check if tournament has entry fee
         require(!tournament.hasEntryFee, "Tournament requires entry fee");
-
-        // Check if already registered
-        require(!tournament.participants[msg.sender], "Already registered");
-
-        // Check max participants
+        // *** UPDATED SENDER ***
+        require(!tournament.participants[_msgSender()], "Already registered");
         if (tournament.maxParticipants > 0) {
             require(tournament.participantCount < tournament.maxParticipants, "Tournament is full");
         }
-
-        // Register participant
-        tournament.participants[msg.sender] = true;
+        // *** UPDATED SENDER ***
+        tournament.participants[_msgSender()] = true;
         tournament.participantCount++;
-
-        emit ParticipantRegistered(tournamentId, msg.sender);
+        // *** UPDATED SENDER ***
+        emit ParticipantRegistered(tournamentId, _msgSender());
     }
 
     /**
      * @dev Register for a tournament with entry fee
-     * @param tournamentId The ID of the tournament
+     * (Uses nonReentrant, updated IERC20 type hint and sender)
      */
     function registerWithEntryFee(uint256 tournamentId)
         external
         payable
+        virtual // Added 'virtual'
         nonReentrant
         tournamentExists(tournamentId)
         tournamentActive(tournamentId)
     {
         Tournament storage tournament = tournaments[tournamentId];
-
-        // Check registration period
         require(block.timestamp <= tournament.registrationEndTime, "Registration period ended");
-
-        // Check if tournament has entry fee
         require(tournament.hasEntryFee, "Tournament does not have entry fee");
-
-        // Check if already registered
-        require(!tournament.participants[msg.sender], "Already registered");
-
-        // Check max participants
+        // *** UPDATED SENDER ***
+        address sender = _msgSender();
+        require(!tournament.participants[sender], "Already registered");
         if (tournament.maxParticipants > 0) {
             require(tournament.participantCount < tournament.maxParticipants, "Tournament is full");
         }
 
-        // Handle entry fee
         if (tournament.entryFeeTokenAddress == address(0)) {
-            // Native token (RON)
             require(msg.value == tournament.entryFeeAmount, "Incorrect entry fee amount");
         } else {
-            // ERC20 token
             require(msg.value == 0, "Don't send RON with token entry fee");
-
-            // Transfer tokens to this contract
-            IERC20 token = IERC20(tournament.entryFeeTokenAddress);
+            // *** UPDATED TYPE HINT ***
+            IERC20Upgradeable token = IERC20Upgradeable(tournament.entryFeeTokenAddress);
             uint256 balanceBefore = token.balanceOf(address(this));
-            token.safeTransferFrom(msg.sender, address(this), tournament.entryFeeAmount);
+            // *** UPDATED SENDER ***
+            token.safeTransferFrom(sender, address(this), tournament.entryFeeAmount);
             uint256 balanceAfter = token.balanceOf(address(this));
             require(balanceAfter - balanceBefore == tournament.entryFeeAmount, "Token transfer amount mismatch");
         }
 
-        // Register participant
-        tournament.participants[msg.sender] = true;
+        // *** UPDATED SENDER ***
+        tournament.participants[sender] = true;
         tournament.participantCount++;
+        // *** UPDATED SENDER ***
+        emit ParticipantRegistered(tournamentId, sender);
 
-        emit ParticipantRegistered(tournamentId, msg.sender);
-
-        // Check if this is the last registration before the deadline
-        // If we're very close to the registration end time (within 1 hour), auto-distribute fees
+        // Auto-distribution logic remains the same conceptually
         if (!tournament.feesDistributed &&
             (block.timestamp + 1 hours >= tournament.registrationEndTime ||
              (tournament.maxParticipants > 0 && tournament.participantCount == tournament.maxParticipants))) {
-
-            // Distribute fees automatically
             (uint256 creatorAmount, uint256 platformFeeAmount) = _distributeEntryFees(tournament, tournamentId);
-
             if (creatorAmount > 0) {
                 emit EntryFeesAutoDistributed(tournamentId, tournament.creator, creatorAmount);
                 emit PlatformFeesAutoDistributed(tournamentId, tournament.entryFeeTokenAddress, owner(), platformFeeAmount);
@@ -384,68 +363,57 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
 
     /**
      * @dev Internal function to distribute entry fees
-     * @param tournament Tournament storage reference
-     * @param tournamentId The ID of the tournament
-     * @return creatorAmount The amount distributed to the creator
-     * @return platformFeeAmount The amount distributed to the platform owner
+     * (Updated IERC20 type hint)
      */
     function _distributeEntryFees(Tournament storage tournament, uint256 tournamentId) internal returns (uint256, uint256) {
-        // Skip if fees already distributed or tournament doesn't have entry fee
         if (tournament.feesDistributed || !tournament.hasEntryFee) {
             return (0, 0);
         }
-
-        // Calculate total entry fees
         uint256 totalEntryFees = tournament.participantCount * tournament.entryFeeAmount;
-
-        // Skip if no entry fees to distribute
         if (totalEntryFees == 0) {
             tournament.feesDistributed = true;
             return (0, 0);
         }
 
-        // Calculate platform fee and creator amount
         uint256 platformFeeAmount = (totalEntryFees * PLATFORM_FEE_PERCENTAGE) / PERCENTAGE_BASE;
         uint256 creatorAmount = totalEntryFees - platformFeeAmount;
+        address ownerAddress = owner(); // From OwnableUpgradeable
 
-        address ownerAddress = owner();
-
-        // Transfer creator amount and platform fees directly
         if (tournament.entryFeeTokenAddress == address(0)) {
-            // Native token (RON)
-            payable(tournament.creator).transfer(creatorAmount);
-            payable(ownerAddress).transfer(platformFeeAmount);
+            // Use SafeERC20Upgradeable's call patterns for consistency if desired, or keep native transfer
+             (bool successCreator,) = payable(tournament.creator).call{value: creatorAmount}("");
+             require(successCreator, "Native transfer failed");
+             (bool successOwner,) = payable(ownerAddress).call{value: platformFeeAmount}("");
+             require(successOwner, "Native transfer failed");
+            // Or stick to .transfer() if preferred and gas stipend is sufficient
+            // payable(tournament.creator).transfer(creatorAmount);
+            // payable(ownerAddress).transfer(platformFeeAmount);
         } else {
-            // ERC20 token
-            IERC20 token = IERC20(tournament.entryFeeTokenAddress);
+            // *** UPDATED TYPE HINT ***
+            IERC20Upgradeable token = IERC20Upgradeable(tournament.entryFeeTokenAddress);
             token.safeTransfer(tournament.creator, creatorAmount);
             token.safeTransfer(ownerAddress, platformFeeAmount);
         }
 
-        // Mark fees as distributed
         tournament.feesDistributed = true;
-
         return (creatorAmount, platformFeeAmount);
     }
 
     /**
      * @dev Automatically distribute entry fees when registration ends
-     * @param tournamentId The ID of the tournament
+     * (Uses nonReentrant from ReentrancyGuardUpgradeable)
      */
     function distributeEntryFees(uint256 tournamentId)
         external
+        virtual // Added 'virtual'
         nonReentrant
         tournamentExists(tournamentId)
     {
         Tournament storage tournament = tournaments[tournamentId];
-
-        // Check if registration period has ended and tournament is about to start
         require(block.timestamp > tournament.registrationEndTime, "Registration period not ended yet");
         require(block.timestamp <= tournament.startTime, "Tournament has already started");
 
-        // Distribute fees
         (uint256 creatorAmount, uint256 platformFeeAmount) = _distributeEntryFees(tournament, tournamentId);
-
         if (creatorAmount > 0) {
             emit EntryFeesAutoDistributed(tournamentId, tournament.creator, creatorAmount);
             emit PlatformFeesAutoDistributed(tournamentId, tournament.entryFeeTokenAddress, owner(), platformFeeAmount);
@@ -453,26 +421,21 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Claim entry fees for a tournament (manual method, still available)
-     * @param tournamentId The ID of the tournament
+     * @dev Claim entry fees for a tournament (manual method)
+     * (Uses nonReentrant and onlyOwner from inherited contracts)
      */
     function claimEntryFees(uint256 tournamentId)
         external
+        virtual // Added 'virtual'
         nonReentrant
         tournamentExists(tournamentId)
-        onlyTournamentCreator(tournamentId)
+        onlyTournamentCreator(tournamentId) // Modifier remains the same
     {
         Tournament storage tournament = tournaments[tournamentId];
-
-        // Check if tournament has entry fee
         require(tournament.hasEntryFee, "Tournament does not have entry fee");
-
-        // Check if fees have already been distributed
         require(!tournament.feesDistributed, "Fees already distributed");
 
-        // Distribute fees
         (uint256 creatorAmount, uint256 platformFeeAmount) = _distributeEntryFees(tournament, tournamentId);
-
         if (creatorAmount > 0) {
             emit EntryFeesCollected(tournamentId, tournament.creator, creatorAmount);
             emit PlatformFeesAutoDistributed(tournamentId, tournament.entryFeeTokenAddress, owner(), platformFeeAmount);
@@ -481,37 +444,33 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
 
     /**
      * @dev Withdraw platform fees
-     * @notice This function is mostly for legacy purposes or for withdrawing fees from tournaments
-     * created before the auto-distribution feature was implemented. New tournaments will automatically
-     * distribute platform fees directly to the owner when registration ends.
-     * @param tokenAddress Address of the token to withdraw
+     * (Uses onlyOwner and nonReentrant from inherited contracts, updated IERC20 type hint)
      */
-    function withdrawPlatformFees(address tokenAddress) external onlyOwner nonReentrant {
+    function withdrawPlatformFees(address tokenAddress) external virtual onlyOwner nonReentrant { // Added 'virtual'
+        // Note: This function interacts with the separate platformFees mapping,
+        // which is NOT populated by the automatic _distributeEntryFees function.
+        // _distributeEntryFees sends platform fees directly to the owner.
+        // This function might be redundant or intended for other fee sources not shown.
+        // If kept, ensure platformFees mapping is populated somehow.
         uint256 amount = platformFees[tokenAddress];
         require(amount > 0, "No fees to withdraw");
-
-        // Reset platform fees
         platformFees[tokenAddress] = 0;
+        address ownerAddress = owner(); // From OwnableUpgradeable
 
-        // Transfer fees to owner
         if (tokenAddress == address(0)) {
-            // Native token (RON)
-            payable(owner()).transfer(amount);
+            (bool successOwner,) = payable(ownerAddress).call{value: amount}("");
+            require(successOwner, "Native transfer failed");
+            // payable(owner()).transfer(amount);
         } else {
-            // ERC20 token
-            IERC20 token = IERC20(tokenAddress);
-            token.safeTransfer(owner(), amount);
+            // *** UPDATED TYPE HINT ***
+            IERC20Upgradeable token = IERC20Upgradeable(tokenAddress);
+            token.safeTransfer(ownerAddress, amount);
         }
-
-        emit PlatformFeesWithdrawn(tokenAddress, owner(), amount);
+        emit PlatformFeesWithdrawn(tokenAddress, ownerAddress, amount);
     }
 
     /**
      * @dev Internal function to declare a winner
-     * @param tournament Tournament storage reference
-     * @param tournamentId The ID of the tournament
-     * @param position Position to declare winner for
-     * @param winner Address of the winner
      */
     function _declareWinner(
         Tournament storage tournament,
@@ -522,32 +481,25 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         require(position < tournament.positionRewardAmounts.length, "Invalid position");
         require(!tournament.claimed[position], "Position already claimed");
         require(winner != address(0), "Winner cannot be zero address");
-
-        // Check if tournament has started
         require(block.timestamp >= tournament.startTime, "Tournament has not started yet");
-
-        // Check if winner is a registered participant
         if (tournament.participantCount > 0) {
             require(tournament.participants[winner], "Winner is not a registered participant");
         }
-
         tournament.winners[position] = winner;
-
         emit WinnerDeclared(tournamentId, position, winner);
     }
 
     /**
      * @dev Tournament creator declares a winner
-     * @param tournamentId The ID of the tournament
-     * @param position Position to declare winner for
-     * @param winner Address of the winner
+     * (Uses nonReentrant from ReentrancyGuardUpgradeable)
      */
     function declareWinner(uint256 tournamentId, uint256 position, address winner)
         external
+        virtual // Added 'virtual'
         nonReentrant
         tournamentExists(tournamentId)
         tournamentActive(tournamentId)
-        onlyTournamentCreator(tournamentId)
+        onlyTournamentCreator(tournamentId) // Modifier remains the same
     {
         Tournament storage tournament = tournaments[tournamentId];
         _declareWinner(tournament, tournamentId, position, winner);
@@ -555,19 +507,17 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
 
     /**
      * @dev Declare multiple winners at once
-     * @param tournamentId The ID of the tournament
-     * @param positions Array of positions
-     * @param winners Array of winner addresses
+     * (Uses nonReentrant from ReentrancyGuardUpgradeable)
      */
     function declareWinners(uint256 tournamentId, uint256[] memory positions, address[] memory winners)
         external
+        virtual // Added 'virtual'
         nonReentrant
         tournamentExists(tournamentId)
         tournamentActive(tournamentId)
-        onlyTournamentCreator(tournamentId)
+        onlyTournamentCreator(tournamentId) // Modifier remains the same
     {
         require(positions.length == winners.length, "Arrays length mismatch");
-
         Tournament storage tournament = tournaments[tournamentId];
         for (uint256 i = 0; i < positions.length; i++) {
             _declareWinner(tournament, tournamentId, positions[i], winners[i]);
@@ -576,11 +526,11 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
 
     /**
      * @dev Winners claim their rewards
-     * @param tournamentId The ID of the tournament
-     * @param position Position to claim reward for
+     * (Uses nonReentrant, updated IERC20 type hint and sender)
      */
     function claimReward(uint256 tournamentId, uint256 position)
         external
+        virtual // Added 'virtual'
         nonReentrant
         tournamentExists(tournamentId)
         tournamentActive(tournamentId)
@@ -588,39 +538,40 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         Tournament storage tournament = tournaments[tournamentId];
         require(position < tournament.positionRewardAmounts.length, "Invalid position");
         require(!tournament.claimed[position], "Position already claimed");
-        require(tournament.winners[position] == msg.sender, "Not the winner");
+        // *** UPDATED SENDER ***
+        address sender = _msgSender();
+        require(tournament.winners[position] == sender, "Not the winner");
 
         tournament.claimed[position] = true;
-
-        // Transfer reward
         uint256 rewardAmount = tournament.positionRewardAmounts[position];
-        if (tournament.rewardTokenAddress == address(0)) {
-            // Native token (RON)
-            payable(msg.sender).transfer(rewardAmount);
-        } else {
-            // ERC20 token
-            IERC20 token = IERC20(tournament.rewardTokenAddress);
-            token.safeTransfer(msg.sender, rewardAmount);
-        }
 
-        emit RewardClaimed(tournamentId, position, msg.sender, rewardAmount);
+        if (tournament.rewardTokenAddress == address(0)) {
+             (bool successSend,) = payable(sender).call{value: rewardAmount}("");
+             require(successSend, "Native transfer failed");
+            // payable(sender).transfer(rewardAmount);
+        } else {
+            // *** UPDATED TYPE HINT ***
+            IERC20Upgradeable token = IERC20Upgradeable(tournament.rewardTokenAddress);
+            token.safeTransfer(sender, rewardAmount);
+        }
+        emit RewardClaimed(tournamentId, position, sender, rewardAmount);
     }
 
     /**
      * @dev Emergency function for creator to cancel tournament and reclaim funds
-     * @param tournamentId The ID of the tournament
+     * (Uses nonReentrant, updated IERC20 type hint)
      */
     function cancelTournament(uint256 tournamentId)
         external
+        virtual // Added 'virtual'
         nonReentrant
         tournamentExists(tournamentId)
         tournamentActive(tournamentId)
-        onlyTournamentCreator(tournamentId)
+        onlyTournamentCreator(tournamentId) // Modifier remains the same
     {
         Tournament storage tournament = tournaments[tournamentId];
         tournament.isActive = false;
 
-        // Calculate unclaimed rewards
         uint256 unclaimedAmount = 0;
         for (uint256 i = 0; i < tournament.positionRewardAmounts.length; i++) {
             if (!tournament.claimed[i]) {
@@ -628,28 +579,27 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
             }
         }
 
-        // Return unclaimed rewards to creator
         if (unclaimedAmount > 0) {
             if (tournament.rewardTokenAddress == address(0)) {
-                // Native token (RON)
-                payable(tournament.creator).transfer(unclaimedAmount);
+                 (bool successSend,) = payable(tournament.creator).call{value: unclaimedAmount}("");
+                 require(successSend, "Native transfer failed");
+                // payable(tournament.creator).transfer(unclaimedAmount);
             } else {
-                // ERC20 token
-                IERC20 token = IERC20(tournament.rewardTokenAddress);
+                // *** UPDATED TYPE HINT ***
+                IERC20Upgradeable token = IERC20Upgradeable(tournament.rewardTokenAddress);
                 token.safeTransfer(tournament.creator, unclaimedAmount);
             }
         }
-
         emit TournamentCancelled(tournamentId);
     }
 
-    /**
-     * @dev Get tournament information
-     * @param tournamentId The ID of the tournament
-     */
+    // --- GETTER FUNCTIONS ---
+    // View functions generally don't need changes for basic upgradeability
+
     function getTournamentInfo(uint256 tournamentId)
         external
         view
+        virtual // Added 'virtual'
         tournamentExists(tournamentId)
         returns (
             address creator,
@@ -673,6 +623,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         )
     {
         Tournament storage tournament = tournaments[tournamentId];
+        // Logic remains the same
         return (
             tournament.creator,
             tournament.name,
@@ -695,14 +646,10 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         );
     }
 
-    /**
-     * @dev Get position information
-     * @param tournamentId The ID of the tournament
-     * @param position Position to get information for
-     */
     function getPositionInfo(uint256 tournamentId, uint256 position)
         external
         view
+        virtual // Added 'virtual'
         tournamentExists(tournamentId)
         returns (
             uint256 rewardAmount,
@@ -712,7 +659,7 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
     {
         Tournament storage tournament = tournaments[tournamentId];
         require(position < tournament.positionRewardAmounts.length, "Invalid position");
-
+        // Logic remains the same
         return (
             tournament.positionRewardAmounts[position],
             tournament.winners[position],
@@ -720,74 +667,63 @@ contract TournamentEscrowV2 is Ownable, ReentrancyGuard {
         );
     }
 
-    /**
-     * @dev Get position reward amounts
-     * @param tournamentId The ID of the tournament
-     */
-    function getPositionRewardAmounts(uint256 tournamentId)
+     function getPositionRewardAmounts(uint256 tournamentId)
         external
         view
+        virtual // Added 'virtual'
         tournamentExists(tournamentId)
         returns (uint256[] memory)
     {
+        // Logic remains the same
         return tournaments[tournamentId].positionRewardAmounts;
     }
 
-    /**
-     * @dev Check if an address is registered for a tournament
-     * @param tournamentId The ID of the tournament
-     * @param participant Address to check
-     */
     function isParticipantRegistered(uint256 tournamentId, address participant)
         external
         view
+        virtual // Added 'virtual'
         tournamentExists(tournamentId)
         returns (bool)
     {
+        // Logic remains the same
         return tournaments[tournamentId].participants[participant];
     }
 
-    /**
-     * @dev Get the position of a winner
-     * @param tournamentId The ID of the tournament
-     * @param winnerAddress Address of the winner
-     */
     function getWinnerPosition(uint256 tournamentId, address winnerAddress)
         external
         view
+        virtual // Added 'virtual'
         tournamentExists(tournamentId)
         returns (uint256)
     {
         Tournament storage tournament = tournaments[tournamentId];
-
+        // Logic remains the same
         for (uint256 i = 0; i < tournament.positionRewardAmounts.length; i++) {
             if (tournament.winners[i] == winnerAddress) {
-                return i + 1; // Return 1-based position (1st, 2nd, 3rd, etc.)
+                return i + 1; // 1-based position
             }
         }
-
         revert("Address is not a winner");
     }
 
-    /**
-     * @dev Check if a winner has claimed their reward
-     * @param tournamentId The ID of the tournament
-     * @param winnerAddress Address of the winner
-     */
     function hasClaimedReward(uint256 tournamentId, address winnerAddress)
         external
         view
+        virtual // Added 'virtual'
         tournamentExists(tournamentId)
         returns (bool)
     {
         Tournament storage tournament = tournaments[tournamentId];
-
+        // Logic remains the same
         for (uint256 i = 0; i < tournament.positionRewardAmounts.length; i++) {
             if (tournament.winners[i] == winnerAddress) {
                 return tournament.claimed[i];
             }
         }
-
         revert("Address is not a winner");
     }
+
+    // Gap added for upgrade safety (prevents new variables from colliding with parent contracts)
+    // See: https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable#storage-gaps
+    uint256[49] private __gap;
 }
