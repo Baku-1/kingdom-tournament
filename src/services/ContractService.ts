@@ -112,6 +112,12 @@ export class ContractService {
     const registrationEndTime = Math.floor(new Date(tournamentData.registrationEndDate).getTime() / 1000);
     const startTime = Math.floor(new Date(tournamentData.startDate).getTime() / 1000);
 
+    // Validate registration period
+    const isValidPeriod = await this.validateRegistrationPeriod(registrationEndTime);
+    if (!isValidPeriod) {
+      throw new Error('Registration period must be at least the minimum required period');
+    }
+
     // Determine reward token address (use zero address for native token)
     const rewardTokenAddress = tournamentData.rewardType === 'token' ?
       tournamentData.rewardTokenAddress :
@@ -218,18 +224,9 @@ export class ContractService {
 
     const contract = this.getTournamentEscrowContract(true);
 
-    // Check if the contract supports the declareWinners function
-    if (typeof contract.declareWinners === 'function') {
-      // Use the batch function if available
-      const tx = await contract.declareWinners(tournamentId, positions, winnerAddresses);
-      await tx.wait();
-    } else {
-      // Fall back to individual declarations if batch function is not available
-      for (let i = 0; i < positions.length; i++) {
-        const tx = await contract.declareWinner(tournamentId, positions[i], winnerAddresses[i]);
-        await tx.wait();
-      }
-    }
+    // Use the batch function
+    const tx = await contract.declareWinners(tournamentId, positions, winnerAddresses);
+    await tx.wait();
 
     return true;
   }
@@ -253,6 +250,70 @@ export class ContractService {
 
     // Use the batch function to declare all winners
     return this.declareWinners(tournamentId, positions, winners);
+  }
+
+  // Get minimum registration period
+  async getMinRegistrationPeriod() {
+    const contract = this.getTournamentEscrowContract();
+    return await contract.getMinRegistrationPeriod();
+  }
+
+  async getPlatformFee() {
+    const contract = this.getTournamentEscrowContract();
+    return await contract.getPlatformFee();
+  }
+
+  async getPlatformFees() {
+    const contract = this.getTournamentEscrowContract();
+    const [ronFees, tokenFees] = await Promise.all([
+      contract.getRonFees(),
+      contract.getTokenFees()
+    ]);
+
+    interface TokenFee {
+      tokenAddress: string;
+      symbol: string;
+      amount: bigint;
+    }
+
+    return {
+      ron: ronFees.toString(),
+      tokens: (tokenFees as TokenFee[]).map(fee => ({
+        address: fee.tokenAddress,
+        symbol: fee.symbol,
+        amount: fee.amount.toString()
+      }))
+    };
+  }
+
+  async isOwner(address: string) {
+    const contract = this.getTournamentEscrowContract();
+    return await contract.isOwner(address);
+  }
+
+  async withdrawRonFees() {
+    if (!this.signer) {
+      throw new Error('Signer not available. Please connect wallet first.');
+    }
+    const contract = this.getTournamentEscrowContract(true);
+    const tx = await contract.withdrawRonFees();
+    await tx.wait();
+  }
+
+  async withdrawTokenFees(tokenAddress: string) {
+    if (!this.signer) {
+      throw new Error('Signer not available. Please connect wallet first.');
+    }
+    const contract = this.getTournamentEscrowContract(true);
+    const tx = await contract.withdrawTokenFees(tokenAddress);
+    await tx.wait();
+  }
+
+  // Check if registration period is valid
+  async validateRegistrationPeriod(registrationEndTime: number) {
+    const minPeriod = await this.getMinRegistrationPeriod();
+    const currentTime = Math.floor(Date.now() / 1000);
+    return registrationEndTime - currentTime >= minPeriod;
   }
 
   // Claim reward

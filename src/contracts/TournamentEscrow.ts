@@ -12,6 +12,7 @@ export const TOURNAMENT_ESCROW_ABI = [
 
   // Winner declaration
   "function declareWinner(uint256 tournamentId, uint256 position, address winner)",
+  "function declareWinners(uint256 tournamentId, uint256[] positions, address[] winners)",
 
   // Reward claiming
   "function claimReward(uint256 tournamentId, uint256 position)",
@@ -24,6 +25,7 @@ export const TOURNAMENT_ESCROW_ABI = [
   "function getPositionInfo(uint256 tournamentId, uint256 position) view returns (uint256 rewardAmount, address winner, bool claimed)",
   "function getPositionRewardAmounts(uint256 tournamentId) view returns (uint256[])",
   "function isParticipantRegistered(uint256 tournamentId, address participant) view returns (bool)",
+  "function MIN_REGISTRATION_PERIOD() view returns (uint256)",
 
   // Events
   "event TournamentCreated(uint256 indexed tournamentId, address indexed creator, string name)",
@@ -31,7 +33,9 @@ export const TOURNAMENT_ESCROW_ABI = [
   "event WinnerDeclared(uint256 indexed tournamentId, uint256 position, address winner)",
   "event RewardClaimed(uint256 indexed tournamentId, uint256 position, address winner, uint256 amount)",
   "event TournamentCancelled(uint256 indexed tournamentId)",
-  "event EntryFeesCollected(uint256 indexed tournamentId, address indexed creator, uint256 amount)"
+  "event EntryFeesCollected(uint256 indexed tournamentId, address indexed creator, uint256 amount)",
+  "event PlatformFeesWithdrawn(address indexed token, address indexed recipient, uint256 amount)",
+  "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)"
 ];
 
 // Contract addresses (to be updated after deployment)
@@ -47,7 +51,9 @@ export const TOURNAMENT_ESCROW_ADDRESS = {
 export const ERC20_ABI = [
   "function approve(address spender, uint256 amount) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)",
-  "function balanceOf(address account) view returns (uint256)"
+  "function balanceOf(address account) view returns (uint256)",
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "function transferFrom(address from, address to, uint256 amount) returns (bool)"
 ];
 
 // Helper function to get contract instance

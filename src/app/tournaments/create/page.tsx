@@ -59,6 +59,33 @@ export default function CreateTournament() {
   const [entryFeeToken, setEntryFeeToken] = useState('RON');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [minRegistrationPeriod, setMinRegistrationPeriod] = useState<number>(0);
+  const [platformFee, setPlatformFee] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchContractInfo = async () => {
+      try {
+        const [minPeriod, platformFeeAmount] = await Promise.all([
+          contractService.getMinRegistrationPeriod(),
+          contractService.getPlatformFee()
+        ]);
+        setMinRegistrationPeriod(Number(minPeriod));
+        setPlatformFee(Number(platformFeeAmount));
+      } catch (error) {
+        console.error('Error fetching contract info:', error);
+      }
+    };
+
+    fetchContractInfo();
+  }, []);
+
+  // Validate registration period
+  const validateRegistrationPeriod = (endDate: string) => {
+    const endTime = new Date(endDate).getTime() / 1000;
+    const currentTime = Math.floor(Date.now() / 1000);
+    return endTime - currentTime >= minRegistrationPeriod;
+  };
+
   // Simple toast function
   const displayToast = (title: string, message: string, type: string) => {
     setToastMessage({ title, message, type });
@@ -74,6 +101,16 @@ export default function CreateTournament() {
       displayToast(
         'Wallet not connected',
         'Please connect your Ronin wallet to create a tournament',
+        'error'
+      );
+      return;
+    }
+
+    // Validate registration period
+    if (!validateRegistrationPeriod(registrationEndDate)) {
+      displayToast(
+        'Invalid Registration Period',
+        `Registration period must be at least ${minRegistrationPeriod / 3600} hours`,
         'error'
       );
       return;
@@ -106,6 +143,7 @@ export default function CreateTournament() {
         hasEntryFee,
         entryFeeAmount: hasEntryFee ? entryFeeAmount : '0',
         entryFeeToken: hasEntryFee ? entryFeeToken : 'RON',
+        platformFee: platformFee.toString(), // Add platform fee to tournament data
       };
 
       const tournamentId = await contractService.createTournament(tournamentData);
@@ -268,6 +306,14 @@ export default function CreateTournament() {
                   className="w-full p-2 border border-gray-300 rounded"
                   required
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  Minimum registration period: {minRegistrationPeriod / 3600} hours
+                </p>
+                {registrationEndDate && !validateRegistrationPeriod(registrationEndDate) && (
+                  <p className="text-sm text-red-500 mt-1">
+                    Registration period must be at least {minRegistrationPeriod / 3600} hours
+                  </p>
+                )}
               </div>
 
               <div>
@@ -595,6 +641,14 @@ export default function CreateTournament() {
                   </p>
                 </div>
               )}
+
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                <h3 className="text-sm font-medium mb-2">Platform Fees</h3>
+                <p className="text-sm text-gray-600">
+                  A platform fee of {platformFee}% will be deducted from the total prize pool.
+                  This fee helps maintain and improve the tournament platform.
+                </p>
+              </div>
 
               <button
                 type="submit"
