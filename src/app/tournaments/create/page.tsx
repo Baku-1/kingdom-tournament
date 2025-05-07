@@ -404,14 +404,14 @@ export default function CreateTournament() {
 
               <div className="p-4 mb-4 bg-blue-50 border border-blue-200 rounded-md">
                 <h3 className="text-md font-medium text-blue-800 mb-2">Important Information</h3>
-                <p className="text-sm text-blue-700 mb-2">
+                <p className="text-sm text-black-700 mb-2">
                   The rewards you specify below will be used as collateral and will be locked in the tournament contract until winners are determined.
                 </p>
-                <p className="text-sm text-blue-700 mb-2">
+                <p className="text-sm text-black-700 mb-2">
                   Make sure you have sufficient funds in your connected wallet. The specified amount will be transferred from your wallet when creating the tournament.
                 </p>
                 {connectedAddress ? (
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-black-700">
                     Connected wallet: <span className="font-medium">{`${connectedAddress.slice(0, 6)}...${connectedAddress.slice(-4)}`}</span>
                   </p>
                 ) : (
