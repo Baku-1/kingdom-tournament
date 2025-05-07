@@ -31,6 +31,12 @@ const rajdhani = Rajdhani({
 export const metadata: Metadata = {
   title: "Cyber Battlefield Tournament",
   description: "Futuristic tournament platform for games on Ronin Blockchain",
+  metadataBase: new URL("https://www.cyberbattlefield.app"),
+  icons: {
+    icon: '/cyber_logo.png',
+    shortcut: '/cyber_logo.png',
+    apple: '/cyber_logo.png',
+  },
 };
 
 export default function RootLayout({
@@ -42,6 +48,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="preload" href="/background.png" as="image" />
+        <link rel="icon" href="/cyber_logo.png" />
+        <link rel="apple-touch-icon" href="/cyber_logo.png" />
+        <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${orbitron.variable} ${rajdhani.variable} antialiased`}
