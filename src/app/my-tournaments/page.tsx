@@ -43,12 +43,12 @@ const MOCK_JOINED_TOURNAMENTS = [
   },
   {
     id: '3',
-    name: 'Battle Racers Grand Prix',
-    description: 'Race to the finish in this high-stakes tournament',
-    game: 'battle-racers',
+    name: 'Moshi Admirals',
+    description: 'Battle to the finish in this high-stakes tournament',
+    game: 'moshi-admiral',
     creator: '0x7890abcdef1234567890abcdef1234567890abcd',
     tournamentType: 'single-elimination',
-    maxParticipants: 8,
+    maxParticipants: 32,
     currentParticipants: 8,
     startDate: new Date(Date.now() - 86400000 * 1), // 1 day ago
     registrationEndDate: new Date(Date.now() - 86400000 * 2), // 2 days ago
@@ -239,7 +239,7 @@ export default function MyTournaments() {
                 {joinedTournaments.length === 0 ? (
                   <div className="flex items-center justify-center min-h-[200px] bg-white p-6 border border-gray-200 rounded-md">
                     <div className="flex flex-col items-center">
-                      <p>You haven&apos;t joined any tournaments yet</p>
+                      <p>You havent joined any tournaments yet</p>
                       <Link
                         href="/tournaments"
                         className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm rounded mt-2"
