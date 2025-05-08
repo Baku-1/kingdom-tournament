@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/providers/WalletProvider';
 import Link from 'next/link';
 import { SUPPORTED_GAMES } from '@/config/ronin';
+import { contractService } from '@/services/ContractService';
+import { ethers, BigNumberish } from 'ethers';
 
 // Mock data for tournaments
 const MOCK_CREATED_TOURNAMENTS = [
@@ -65,6 +67,23 @@ interface GameInfo {
   image: string;
 }
 
+interface ContractTournament {
+  id: BigNumberish;
+  name: string;
+  description: string;
+  gameId: string;
+  creator: string;
+  tournamentType: string;
+  maxParticipants: BigNumberish;
+  participantCount: BigNumberish;
+  startTime: BigNumberish;
+  registrationEndTime: BigNumberish;
+  isActive: boolean;
+  rewardTokenAddress: string;
+  totalRewardAmount: BigNumberish;
+  rewardType: 'token' | 'nft';
+}
+
 interface Tournament {
   id: string;
   name: string;
@@ -85,21 +104,77 @@ interface Tournament {
 
 export default function MyTournaments() {
   const { connectedAddress, connectWallet } = useWallet();
-  const [createdTournaments] = useState(MOCK_CREATED_TOURNAMENTS);
-  const [joinedTournaments] = useState(MOCK_JOINED_TOURNAMENTS);
+  const [createdTournaments, setCreatedTournaments] = useState<Tournament[]>([]);
+  const [joinedTournaments, setJoinedTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('created');
 
-  // Simulate loading data
+  // Fetch tournaments when wallet connects
   useEffect(() => {
-    if (connectedAddress) {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
+    const fetchTournaments = async () => {
+      if (!connectedAddress) return;
 
-      return () => clearTimeout(timer);
-    }
+      try {
+        setIsLoading(true);
+        
+        // Get all tournaments from contract
+        const allTournaments = await contractService.getAllTournaments();
+        
+        // Filter created tournaments
+        const created = allTournaments
+          .filter((t: ContractTournament) => 
+            t.creator.toLowerCase() === connectedAddress.toLowerCase()
+          )
+          .map(formatTournamentData);
+
+        // Filter joined tournaments
+        const joined = allTournaments
+          .filter(async (t: ContractTournament) => {
+            const isRegistered = await contractService.isParticipantRegistered(t.id.toString(), connectedAddress);
+            return isRegistered && t.creator.toLowerCase() !== connectedAddress.toLowerCase();
+          })
+          .map(formatTournamentData);
+
+        setCreatedTournaments(created);
+        setJoinedTournaments(joined);
+      } catch (error) {
+        console.error('Error fetching tournaments:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTournaments();
   }, [connectedAddress]);
+
+  // Format tournament data from contract
+  const formatTournamentData = (tournament: ContractTournament): Tournament => {
+    return {
+      id: tournament.id.toString(),
+      name: tournament.name,
+      description: tournament.description,
+      game: tournament.gameId,
+      creator: tournament.creator,
+      tournamentType: tournament.tournamentType,
+      maxParticipants: Number(tournament.maxParticipants),
+      currentParticipants: Number(tournament.participantCount),
+      startDate: new Date(Number(tournament.startTime) * 1000),
+      registrationEndDate: new Date(Number(tournament.registrationEndTime) * 1000),
+      status: getTournamentStatus(tournament),
+      rewardType: tournament.rewardTokenAddress === ethers.ZeroAddress ? 'nft' : 'token',
+      rewardAmount: tournament.rewardType === 'token' ? ethers.formatEther(tournament.totalRewardAmount) : undefined,
+      rewardToken: tournament.rewardType === 'token' ? 'RON' : undefined,
+      rewardNftName: tournament.rewardType === 'nft' ? 'Tournament NFT' : undefined,
+    };
+  };
+
+  // Get tournament status based on timestamps and active state
+  const getTournamentStatus = (tournament: ContractTournament): string => {
+    const now = Math.floor(Date.now() / 1000);
+    if (!tournament.isActive) return 'completed';
+    if (Number(tournament.startTime) <= now) return 'active';
+    return 'registration';
+  };
 
   // Format date for display
   const formatDate = (date: Date) => {

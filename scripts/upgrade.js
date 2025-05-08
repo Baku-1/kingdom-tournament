@@ -1,4 +1,5 @@
 const { ethers, upgrades } = require("hardhat");
+const hre = require("hardhat");
 
 async function main() {
   const network = hre.network.name;
@@ -24,8 +25,8 @@ async function main() {
   await upgraded.deployTransaction.wait(5);
 
   // Network-specific verification
-  if (network === "ronin") {
-    console.log("Ronin network detected - skipping standard verification");
+  if (network === "roninTestnet") {
+    console.log("Ronin Testnet detected - skipping standard verification");
     // Add Ronin-specific verification if available
   } else {
     try {
@@ -45,6 +46,6 @@ async function main() {
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("Upgrade failed:", error);
+    console.error(error);
     process.exit(1);
   }); 

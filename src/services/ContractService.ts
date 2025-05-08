@@ -539,6 +539,25 @@ export class ContractService {
 
     return participants;
   }
+
+  async getAllTournaments(): Promise<any[]> {
+    const contract = this.getTournamentEscrowContract();
+    
+    try {
+      const tournamentCount = await contract.getTournamentCount();
+      const tournaments = [];
+      
+      for (let i = 0; i < tournamentCount; i++) {
+        const tournament = await contract.getTournamentInfo(i);
+        tournaments.push(tournament);
+      }
+      
+      return tournaments;
+    } catch (error) {
+      console.error('Error getting all tournaments:', error);
+      throw error;
+    }
+  }
 }
 
 // Create singleton instance

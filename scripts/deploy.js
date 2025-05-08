@@ -1,16 +1,42 @@
 const { ethers, upgrades } = require("hardhat");
+const path = require('path');
+const fs = require('fs');
+
+// More verbose dotenv loading with debugging
+const dotenv = require('dotenv');
+const envPath = path.resolve(process.cwd(), '.env');
+console.log('Looking for .env file at:', envPath);
+console.log('.env file exists:', fs.existsSync(envPath));
+if (fs.existsSync(envPath)) {
+  console.log('.env file content:', fs.readFileSync(envPath, 'utf8'));
+}
+const result = dotenv.config();
+console.log('dotenv.config() result:', result);
 
 async function main() {
-  const network = process.env.HARDHAT_NETWORK || "localhost";
-  console.log(`Deploying to ${network} network...`);
+  // Debug line to check if .env is being read
+  console.log("Environment variables loaded:", {
+    hasPrivateKey: !!process.env.PRIVATE_KEY,
+    privateKeyLength: process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY.length : 0,
+    cwd: process.cwd()
+  });
 
-  // Deploy the upgradeable TournamentEscrowV2 contract
+  if (!process.env.PRIVATE_KEY) {
+    throw new Error("Please set your PRIVATE_KEY in the .env file");
+  }
+
+  // Get the deployer from hardhat's ethers
+  const [deployer] = await ethers.getSigners();
+  console.log(`Deploying with account: ${deployer.address}`);
+
+  // Get the contract factory
   const TournamentEscrowV2 = await ethers.getContractFactory("TournamentEscrowV2");
   console.log("Deploying TournamentEscrowV2...");
 
+  // Deploy using the upgrades plugin
   const tournamentEscrow = await upgrades.deployProxy(TournamentEscrowV2, [], {
-    initializer: 'initialize', // if your contract has an initialize function
-    kind: 'uups' // or 'transparent' depending on your upgrade pattern
+    initializer: 'initialize',
+    kind: 'uups'
   });
 
   await tournamentEscrow.waitForDeployment();
@@ -25,25 +51,7 @@ async function main() {
   const adminAddress = await upgrades.erc1967.getAdminAddress(tournamentEscrowAddress);
   console.log(`Admin contract address: ${adminAddress}`);
 
-  // Wait for block confirmations
-  console.log("Waiting for block confirmations...");
-
-  // Network-specific verification
-  if (network === "roninTestnet") {
-    console.log("Ronin Testnet detected - skipping standard verification");
-    // Add Ronin-specific verification if available
-  } else {
-    try {
-      console.log("Verifying implementation contract...");
-      await hre.run("verify:verify", {
-        address: implementationAddress,
-        constructorArguments: [],
-      });
-      console.log("Implementation contract verified!");
-    } catch (e) {
-      console.log("Verification failed:", e);
-    }
-  }
+  console.log("Deployment completed!");
 }
 
 main()
@@ -52,3 +60,5 @@ main()
     console.error("Deployment failed:", error);
     process.exit(1);
   });
+
+
