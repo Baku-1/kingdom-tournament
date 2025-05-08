@@ -58,19 +58,19 @@ export const SUPPORTED_GAMES = [
     image: '/games/axie-infinity.png',
   },
   {
-    id: 'pixels',
-    name: 'Pixels',
-    image: '/games/pixels.png',
+    id: 'ronin-rumble',
+    name: 'Ronin Rumble',
+    image: '/games/ronin-rumble.png',
   },
   {
-    id: 'battle-racers',
-    name: 'Battle Racers',
-    image: '/games/battle-racers.png',
+    id: 'admirals',
+    name: 'Moshi Admirals',
+    image: '/games/moshi-admiral.png',
   },
   {
-    id: 'mavis-market',
-    name: 'Mavis Market',
-    image: '/games/mavis-market.png',
+    id: 'neotrade',
+    name: 'NeoTrades',
+    image: '/games/neotrade.png',
   },
   {
     id: 'other',
