@@ -5,6 +5,7 @@ import { useWallet } from '@/providers/WalletProvider';
 import { useRouter } from 'next/navigation';
 import { SUPPORTED_GAMES, TOURNAMENT_TYPES } from '@/config/ronin';
 import { contractService } from '@/services/ContractService';
+import { ethers } from 'ethers';
 
 type TokenBalances = {
   RON: string;
@@ -40,11 +41,11 @@ export default function CreateTournament() {
   const [nftId, setNftId] = useState('');
 
   // Mock wallet token balances (in a real app, these would be fetched from the blockchain)
-  const [walletBalances] = useState<TokenBalances>({
-    RON: '1000',
-    AXS: '50',
-    SLP: '10000',
-    USDC: '500'
+  const [walletBalances, setWalletBalances] = useState<TokenBalances>({
+    RON: '0',
+    AXS: '0',
+    SLP: '0',
+    USDC: '0'
   });
   const [positionBasedRewards, setPositionBasedRewards] = useState(false);
   const [rewardDistribution, setRewardDistribution] = useState({
@@ -78,6 +79,52 @@ export default function CreateTournament() {
 
     fetchContractInfo();
   }, []);
+
+  // Fetch wallet balances
+  const fetchWalletBalances = async () => {
+    if (!connectedAddress) return;
+
+    try {
+      const provider = contractService.provider;
+      if (!provider) return;
+
+      // Get RON balance (native token)
+      const ronBalance = await provider.getBalance(connectedAddress);
+      setWalletBalances(prev => ({
+        ...prev,
+        RON: ethers.formatEther(ronBalance)
+      }));
+
+      // Get ERC20 token balances
+      const tokenAddresses: TokenAddresses = {
+        RON: connectedAddress,
+        AXS: '0x97a9107c1793bc407d6f527b77e7fff4d812bece',
+        SLP: '0xa8754b9fa15fc18bb59458815510e40a12cd2014',
+        USDC: '0x0b7007c13325c48911f73a2dad5fa5dcbf808adc'
+      };
+
+      // Fetch each token balance
+      for (const [token, address] of Object.entries(tokenAddresses)) {
+        if (token === 'RON') continue; // Skip RON as we already got it
+        
+        const tokenContract = contractService.getERC20Contract(address);
+        const balance = await tokenContract.balanceOf(connectedAddress);
+        setWalletBalances(prev => ({
+          ...prev,
+          [token]: ethers.formatUnits(balance, 18)
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching wallet balances:', error);
+    }
+  };
+
+  // Fetch balances when wallet connects
+  useEffect(() => {
+    if (connectedAddress) {
+      fetchWalletBalances();
+    }
+  }, [connectedAddress]);
 
   // Validate registration period
   const validateRegistrationPeriod = (endDate: string) => {

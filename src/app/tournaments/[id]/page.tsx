@@ -207,42 +207,27 @@ export default function TournamentDetail() {
         // Comment out the next lines and uncomment the contract calls when ready for production
 
         // Mock data for development
-        const mockTournamentData = MOCK_TOURNAMENT;
+        //const mockTournamentData = MOCK_TOURNAMENT;
 
-        // Check if the connected user is registered (using mock data)
-        if (connectedAddress) {
-          const isUserRegistered = mockTournamentData.participants.some(
-            (p) => p.address.toLowerCase() === connectedAddress.toLowerCase()
-          );
-          setIsRegistered(isUserRegistered);
-
-          // Check if user is creator
-          setIsCreator(mockTournamentData.creator.toLowerCase() === connectedAddress.toLowerCase());
-        }
-
-        setIsLoading(false);
-
-        // Uncomment the following code to fetch data from the contract
-        /*
         // Fetch tournament data from the contract
         const tournamentData = await contractService.getTournamentInfo(tournamentId);
 
         // Format the data to match our Tournament type
-        const formattedTournament = {
+        const formattedTournament: Tournament = {
           id: tournamentData.id,
           name: tournamentData.name,
           description: tournamentData.description,
           game: tournamentData.gameId,
           creator: tournamentData.creator,
-          tournamentType: tournamentData.tournamentType,
+          tournamentType: tournamentData.tournamentType as TournamentType,
           maxParticipants: tournamentData.maxParticipants,
           currentParticipants: tournamentData.participantCount,
-          participants: [], // Will be populated below
+          participants: [] as Participant[], // Explicitly type as Participant[]
           startDate: tournamentData.startDate,
           registrationEndDate: tournamentData.registrationEndDate,
           status: new Date() < tournamentData.registrationEndDate ? 'registration' :
                  new Date() < tournamentData.startDate ? 'active' : 'completed',
-          rewardType: tournamentData.rewardType,
+          rewardType: tournamentData.rewardType as 'token' | 'nft',
           rewardAmount: tournamentData.totalRewardAmount,
           rewardToken: tournamentData.rewardTokenAddress === '0x0000000000000000000000000000000000000000' ? 'RON' : 'Token',
           rewardDistribution: {
@@ -258,9 +243,18 @@ export default function TournamentDetail() {
           brackets: [], // Will be generated based on participants
         };
 
+        // Check if the connected user is registered
+        if (connectedAddress) {
+          const isUserRegistered = await contractService.isParticipantRegistered(tournamentId, connectedAddress);
+          setIsRegistered(isUserRegistered);
+
+          // Check if user is creator
+          setIsCreator(formattedTournament.creator.toLowerCase() === connectedAddress.toLowerCase());
+        }
+
         // Calculate reward distribution based on position reward amounts
         if (tournamentData.positionRewardAmounts.length > 0) {
-          const totalReward = tournamentData.positionRewardAmounts.reduce((sum, amount) => sum + parseFloat(amount), 0);
+          const totalReward = tournamentData.positionRewardAmounts.reduce((sum: number, amount: string) => sum + parseFloat(amount), 0);
           if (totalReward > 0) {
             if (tournamentData.positionRewardAmounts.length >= 1) {
               formattedTournament.rewardDistribution.first = Math.round(parseFloat(tournamentData.positionRewardAmounts[0]) / totalReward * 100);
@@ -318,7 +312,6 @@ export default function TournamentDetail() {
 
         setTournament(formattedTournament as Tournament);
         setIsLoading(false);
-        */
       } catch (error) {
         console.error('Error fetching tournament data:', error);
         displayToast(
