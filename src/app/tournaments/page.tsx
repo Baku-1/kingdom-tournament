@@ -25,9 +25,9 @@ const MOCK_TOURNAMENTS = [
   },
   {
     id: '2',
-    name: 'Pixels Weekly Tournament',
-    description: 'Weekly tournament for Pixels players with NFT rewards',
-    game: 'pixels',
+    name: 'Ronin Rumble',
+    description: 'Weekly tournament for Rumble players with NFT rewards',
+    game: 'Ronin Rumble',
     creator: '0xabcdef1234567890abcdef1234567890abcdef12',
     tournamentType: 'double-elimination',
     maxParticipants: 32,
@@ -36,13 +36,13 @@ const MOCK_TOURNAMENTS = [
     registrationEndDate: new Date(Date.now() + 3600000 * 12), // 12 hours from now
     status: 'registration',
     rewardType: 'nft',
-    rewardNftName: 'Rare Pixel Character',
+    rewardNftName: 'Nexus NFT Character',
   },
   {
     id: '3',
-    name: 'Battle Racers Grand Prix',
-    description: 'Race to the finish in this high-stakes tournament',
-    game: 'battle-racers',
+    name: 'Moshi Admirals',
+    description: 'Battle to the top in this high-stakes tournament',
+    game: 'Admirals',
     creator: '0x7890abcdef1234567890abcdef1234567890abcd',
     tournamentType: 'single-elimination',
     maxParticipants: 8,
@@ -56,9 +56,9 @@ const MOCK_TOURNAMENTS = [
   },
   {
     id: '4',
-    name: 'Mavis Market Trading Competition',
+    name: 'NeoTrades Swapping Competition',
     description: 'Show off your trading skills in this special event',
-    game: 'mavis-market',
+    game: 'NeoTrades',
     creator: '0xdef1234567890abcdef1234567890abcdef123456',
     tournamentType: 'single-elimination',
     maxParticipants: 64,
@@ -245,7 +245,7 @@ export default function Tournaments() {
                     </h2>
                     <div className="flex items-center mt-2">
                       <div className="w-5 h-5 bg-gray-200 rounded-full mr-2"></div>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-black-500">
                         {getGameInfo(tournament.game).name}
                       </span>
                     </div>
