@@ -71,7 +71,7 @@ describe("TournamentEscrowV2 - Tournament Cancellation", function () {
         "Test Tournament",
         "A test tournament",
         "game1",
-        0,
+        // tournamentType parameter removed
         100,
         registrationEndTime,
         startTime,
@@ -207,7 +207,7 @@ describe("TournamentEscrowV2 - Tournament Cancellation", function () {
         "Native Token Tournament",
         "A tournament with native token rewards",
         "game7",
-        0,
+        // tournamentType parameter removed
         100,
         registrationEndTime,
         startTime,

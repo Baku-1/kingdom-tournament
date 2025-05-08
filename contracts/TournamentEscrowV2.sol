@@ -2,10 +2,10 @@
 pragma solidity ^0.8.19;
 
 // UPGRADEABLE IMPORTS
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
@@ -16,8 +16,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
  * limited winner positions, removed auto fee distribution.
  */
 contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    // UPGRADEABLE LIBRARY USAGE
-    using SafeERC20Upgradeable for IERC20Upgradeable;
+    // LIBRARY USAGE
+    using SafeERC20 for IERC20;
 
     // --- CONSTANTS ---
     // Tournament types (Constants are fine, even if type removed from struct)
@@ -96,7 +96,7 @@ contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     }
 
     function initialize() public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
         nextTournamentId = 1;
@@ -169,7 +169,7 @@ contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
             assembly { codeSize := extcodesize(tokenAddr) }
             require(codeSize > 0, "Reward token address is not a contract");
 
-            IERC20Upgradeable token = IERC20Upgradeable(rewardTokenAddress);
+            IERC20 token = IERC20(rewardTokenAddress);
             uint256 balanceBefore = token.balanceOf(address(this));
             token.safeTransferFrom(msgSender, address(this), totalReward);
             uint256 balanceAfter = token.balanceOf(address(this));
@@ -336,7 +336,7 @@ contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
             // Native currency is now held by the contract
         } else {
             require(msg.value == 0, "Do not send native currency with token entry fee");
-            IERC20Upgradeable token = IERC20Upgradeable(tournament.entryFeeTokenAddress);
+            IERC20 token = IERC20(tournament.entryFeeTokenAddress);
             // Transfer fee FROM sender TO this contract
             token.safeTransferFrom(sender, address(this), tournament.entryFeeAmount);
         }
@@ -383,7 +383,7 @@ contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
             require(successOwner, "Native fee transfer to owner failed");
         } else {
             // ERC20 token transfer
-            IERC20Upgradeable token = IERC20Upgradeable(tournament.entryFeeTokenAddress);
+            IERC20 token = IERC20(tournament.entryFeeTokenAddress);
             require(token.balanceOf(address(this)) >= totalEntryFees, "Insufficient contract balance for token fee distribution");
             token.safeTransfer(tournament.creator, creatorAmount);
             token.safeTransfer(ownerAddress, platformFeeAmount);
@@ -428,7 +428,7 @@ contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
             (bool successOwner,) = payable(ownerAddress).call{value: amount}("");
             require(successOwner, "Native transfer failed");
         } else {
-            IERC20Upgradeable token = IERC20Upgradeable(tokenAddress);
+            IERC20 token = IERC20(tokenAddress);
             token.safeTransfer(ownerAddress, amount);
         }
         emit PlatformFeesWithdrawn(tokenAddress, ownerAddress, amount);
@@ -514,7 +514,7 @@ contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
              (bool successSend,) = payable(sender).call{value: rewardAmount}("");
              require(successSend, "Native reward transfer failed");
         } else {
-            IERC20Upgradeable token = IERC20Upgradeable(tournament.rewardTokenAddress);
+            IERC20 token = IERC20(tournament.rewardTokenAddress);
             require(token.balanceOf(address(this)) >= rewardAmount, "Insufficient contract balance for token reward");
             token.safeTransfer(sender, rewardAmount);
         }
@@ -561,7 +561,7 @@ contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
                  (bool successSend,) = payable(creator).call{value: unclaimedRewardAmount}("");
                  require(successSend, "Native reward refund to creator failed");
             } else {
-                IERC20Upgradeable token = IERC20Upgradeable(tournament.rewardTokenAddress);
+                IERC20 token = IERC20(tournament.rewardTokenAddress);
                 require(token.balanceOf(address(this)) >= unclaimedRewardAmount, "Insufficient contract balance for token reward refund");
                 token.safeTransfer(creator, unclaimedRewardAmount);
             }
@@ -602,7 +602,7 @@ contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
             (bool successSend,) = payable(sender).call{value: feeAmount}("");
             require(successSend, "Native entry fee refund failed");
         } else {
-            IERC20Upgradeable token = IERC20Upgradeable(tournament.entryFeeTokenAddress);
+            IERC20 token = IERC20(tournament.entryFeeTokenAddress);
             require(token.balanceOf(address(this)) >= feeAmount, "Insufficient contract balance for token refund");
             token.safeTransfer(sender, feeAmount);
         }
@@ -723,21 +723,3 @@ contract TournamentEscrowV2 is Initializable, UUPSUpgradeable, OwnableUpgradeabl
     // Gap added for upgrade safety
     uint256[49] private __gap;
 }
-```
-
-**Key Changes Implemented:**
-
-* **Refund Logic:**
-    * Added `entryFeesPaid` mapping to track payments.
-    * `registerWithEntryFee` now stores the fee amount in `entryFeesPaid` and ensures the contract holds the funds.
-    * Added `claimEntryFeeRefund` function allowing participants to withdraw their fee if `!isActive` and `!feesDistributed`.
-    * Added `EntryFeeRefunded` event.
-    * `cancelTournament` now simply sets `isActive = false`, enabling the pull refund mechanism. It also clarifies logic for returning unclaimed rewards.
-    * `_distributeEntryFees` checks `isActive` and transfers from the contract's balance.
-* **Fee Distribution Trigger:** Removed the auto-distribution block from `registerWithEntryFee`. Relies on the external `distributeEntryFees` call. Renamed fee distribution event for clarity.
-* **`tournamentType` Removed:** Deleted from `Tournament` struct, `_createTournament`, `createTournament`, `createTournamentWithEntryFee`, and `getTournamentInfo`.
-* **Winner Limit:** Added `require(positionRewardAmounts.length <= MAX_WINNER_POSITIONS, "Exceeds max winner positions");` in `_createTournament`. Defined `MAX_WINNER_POSITIONS` constant.
-* **`withdrawPlatformFees`:** Left functionally the same, but added comments clarifying its likely disconnection from entry fees in the current flow.
-* **Minor Fixes/Improvements:** Added checks for zero reward/entry fee amounts, clarified event emissions (1-based positions), used low-level calls for native transfers with balance checks. Added `getEntryFeePaid` view function.
-
-This version addresses the specific points raised while maintaining the upgradeable structure. Remember to test these changes thoroughly, including the cancellation and refund scenarios, before deployme

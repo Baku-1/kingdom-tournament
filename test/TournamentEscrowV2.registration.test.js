@@ -74,7 +74,7 @@ describe("TournamentEscrowV2 - Registration and Entry Fees", function () {
         "Test Tournament",
         "A test tournament",
         "game1",
-        0,
+        // tournamentType parameter removed
         10, // max 10 participants
         registrationEndTime,
         startTime,
@@ -145,7 +145,7 @@ describe("TournamentEscrowV2 - Registration and Entry Fees", function () {
         "Small Tournament",
         "A tournament with few spots",
         "game1",
-        0,
+        // tournamentType parameter removed
         2, // max 2 participants
         registrationEndTime,
         startTime,
@@ -185,7 +185,7 @@ describe("TournamentEscrowV2 - Registration and Entry Fees", function () {
         "Unlimited Tournament",
         "A tournament with unlimited spots",
         "game1",
-        0,
+        // tournamentType parameter removed
         0, // unlimited participants
         registrationEndTime,
         startTime,
@@ -238,7 +238,7 @@ describe("TournamentEscrowV2 - Registration and Entry Fees", function () {
         "Entry Fee Tournament",
         "A tournament with entry fee",
         "game1",
-        0,
+        // tournamentType parameter removed
         10,
         registrationEndTime,
         startTime,
@@ -385,7 +385,7 @@ describe("TournamentEscrowV2 - Registration and Entry Fees", function () {
         "Regular Tournament",
         "A tournament without entry fee",
         "game1",
-        0,
+        // tournamentType parameter removed
         10,
         registrationEndTime,
         startTime,

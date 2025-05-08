@@ -58,7 +58,7 @@ describe("TournamentEscrowV2 - Winner Declaration and Rewards", function () {
       "Test Tournament",
       "A test tournament",
       "game1",
-      0,
+      // tournamentType parameter removed
       100,
       registrationEndTime,
       startTime,
@@ -170,7 +170,7 @@ describe("TournamentEscrowV2 - Winner Declaration and Rewards", function () {
         "Future Tournament",
         "A tournament that hasn't started yet",
         "game1",
-        0,
+        // tournamentType parameter removed
         100,
         registrationEndTime,
         startTime,

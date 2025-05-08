@@ -44,9 +44,12 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
 
   describe("Tournament Creation", function () {
     it("Should create a tournament with ERC20 token rewards", async function () {
-      const now = Math.floor(Date.now() / 1000);
-      const registrationEndTime = now + 3600; // 1 hour from now
-      const startTime = now + 7200; // 2 hours from now
+      // Get the current block timestamp to ensure we're using blockchain time
+      const latestBlock = await ethers.provider.getBlock("latest");
+      const currentTimestamp = latestBlock.timestamp;
+
+      const registrationEndTime = currentTimestamp + 3600; // 1 hour from now
+      const startTime = currentTimestamp + 7200; // 2 hours from now
 
       // Position reward amounts
       const positionRewardAmounts = [
@@ -60,7 +63,7 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
         "Test Tournament",
         "A test tournament",
         "game1",
-        0, // single elimination
+        // tournamentType parameter removed
         100, // max participants
         registrationEndTime,
         startTime,
@@ -88,10 +91,11 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
       expect(tournamentInfo[1]).to.equal("Test Tournament"); // name
       expect(tournamentInfo[2]).to.equal("A test tournament"); // description
       expect(tournamentInfo[3]).to.equal("game1"); // gameId
-      expect(tournamentInfo[4]).to.equal(0); // tournamentType
-      expect(tournamentInfo[9]).to.be.true; // isActive
-      expect(tournamentInfo[10]).to.equal(await mockToken.getAddress()); // rewardTokenAddress
-      expect(tournamentInfo[12]).to.equal(3); // positionCount
+      // tournamentType field removed from contract
+      expect(tournamentInfo[4]).to.equal(100); // maxParticipants
+      expect(tournamentInfo[8]).to.be.true; // isActive
+      expect(tournamentInfo[9]).to.equal(await mockToken.getAddress()); // rewardTokenAddress
+      expect(tournamentInfo[11]).to.equal(3); // positionCount
 
       // Check position reward amounts
       const rewardAmounts = await tournamentEscrow.getPositionRewardAmounts(tournamentId);
@@ -102,9 +106,12 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
     });
 
     it("Should create a tournament with native token rewards", async function () {
-      const now = Math.floor(Date.now() / 1000);
-      const registrationEndTime = now + 3600;
-      const startTime = now + 7200;
+      // Get the current block timestamp to ensure we're using blockchain time
+      const latestBlock = await ethers.provider.getBlock("latest");
+      const currentTimestamp = latestBlock.timestamp;
+
+      const registrationEndTime = currentTimestamp + 3600; // 1 hour from now
+      const startTime = currentTimestamp + 7200; // 2 hours from now
 
       // Position reward amounts
       const positionRewardAmounts = [
@@ -121,7 +128,7 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
         "Native Token Tournament",
         "A tournament with native token rewards",
         "game2",
-        1, // double elimination
+        // tournamentType parameter removed
         50, // max participants
         registrationEndTime,
         startTime,
@@ -140,14 +147,17 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
       const tournamentInfo = await tournamentEscrow.getTournamentInfo(tournamentId);
 
       // Check tournament details
-      expect(tournamentInfo[10]).to.equal(ethers.ZeroAddress); // rewardTokenAddress should be address(0)
-      expect(tournamentInfo[11]).to.equal(totalReward); // totalRewardAmount
+      expect(tournamentInfo[9]).to.equal(ethers.ZeroAddress); // rewardTokenAddress should be address(0)
+      expect(tournamentInfo[10]).to.equal(totalReward); // totalRewardAmount
     });
 
     it("Should fail if name is empty", async function () {
-      const now = Math.floor(Date.now() / 1000);
-      const registrationEndTime = now + 3600;
-      const startTime = now + 7200;
+      // Get the current block timestamp to ensure we're using blockchain time
+      const latestBlock = await ethers.provider.getBlock("latest");
+      const currentTimestamp = latestBlock.timestamp;
+
+      const registrationEndTime = currentTimestamp + 3600; // 1 hour from now
+      const startTime = currentTimestamp + 7200; // 2 hours from now
 
       const positionRewardAmounts = [
         ethers.parseUnits("50", 18),
@@ -161,7 +171,7 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
           "", // Empty name
           "A test tournament",
           "game1",
-          0,
+          // tournamentType parameter removed
           100,
           registrationEndTime,
           startTime,
@@ -171,37 +181,18 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
       ).to.be.revertedWith("Name cannot be empty");
     });
 
-    it("Should fail if tournament type is invalid", async function () {
-      const now = Math.floor(Date.now() / 1000);
-      const registrationEndTime = now + 3600;
-      const startTime = now + 7200;
-
-      const positionRewardAmounts = [
-        ethers.parseUnits("50", 18),
-        ethers.parseUnits("30", 18),
-        ethers.parseUnits("20", 18)
-      ];
-
-      // Try to create tournament with invalid tournament type
-      await expect(
-        tournamentEscrow.connect(creator).createTournament(
-          "Invalid Type Tournament",
-          "A test tournament",
-          "game1",
-          2, // Invalid type (only 0 and 1 are valid)
-          100,
-          registrationEndTime,
-          startTime,
-          await mockToken.getAddress(),
-          positionRewardAmounts
-        )
-      ).to.be.revertedWith("Invalid tournament type");
+    // Tournament type validation has been removed from the contract
+    it.skip("Should fail if tournament type is invalid", async function () {
+      // Test skipped as tournament type parameter has been removed from the contract
     });
 
     it("Should fail if registration end time is in the past", async function () {
-      const now = Math.floor(Date.now() / 1000);
-      const registrationEndTime = now - 3600; // 1 hour in the past
-      const startTime = now + 7200;
+      // Get the current block timestamp to ensure we're using blockchain time
+      const latestBlock = await ethers.provider.getBlock("latest");
+      const currentTimestamp = latestBlock.timestamp;
+
+      const registrationEndTime = currentTimestamp - 3600; // 1 hour in the past
+      const startTime = currentTimestamp + 7200; // 2 hours from now
 
       const positionRewardAmounts = [
         ethers.parseUnits("50", 18),
@@ -215,7 +206,7 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
           "Past Registration Tournament",
           "A test tournament",
           "game1",
-          0,
+          // tournamentType parameter removed
           100,
           registrationEndTime,
           startTime,
@@ -226,9 +217,12 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
     });
 
     it("Should fail if start time is before registration end time", async function () {
-      const now = Math.floor(Date.now() / 1000);
-      const registrationEndTime = now + 7200; // 2 hours in the future
-      const startTime = now + 3600; // 1 hour in the future (before registration ends)
+      // Get the current block timestamp to ensure we're using blockchain time
+      const latestBlock = await ethers.provider.getBlock("latest");
+      const currentTimestamp = latestBlock.timestamp;
+
+      const registrationEndTime = currentTimestamp + 7200; // 2 hours in the future
+      const startTime = currentTimestamp + 3600; // 1 hour in the future (before registration ends)
 
       const positionRewardAmounts = [
         ethers.parseUnits("50", 18),
@@ -242,7 +236,7 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
           "Invalid Timing Tournament",
           "A test tournament",
           "game1",
-          0,
+          // tournamentType parameter removed
           100,
           registrationEndTime,
           startTime,
@@ -258,9 +252,12 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
 
     beforeEach(async function () {
       // Create a tournament for testing
-      const now = Math.floor(Date.now() / 1000);
-      const registrationEndTime = now + 3600;
-      const startTime = now + 7200;
+      // Get the current block timestamp to ensure we're using blockchain time
+      const latestBlock = await ethers.provider.getBlock("latest");
+      const currentTimestamp = latestBlock.timestamp;
+
+      const registrationEndTime = currentTimestamp + 3600; // 1 hour from now
+      const startTime = currentTimestamp + 7200; // 2 hours from now
 
       const positionRewardAmounts = [
         ethers.parseUnits("50", 18),
@@ -272,7 +269,7 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
         "Test Tournament",
         "A test tournament",
         "game1",
-        0,
+        // tournamentType parameter removed
         100,
         registrationEndTime,
         startTime,
@@ -294,13 +291,13 @@ describe("TournamentEscrowV2 - Basic Functionality", function () {
       expect(tournamentInfo[1]).to.equal("Test Tournament"); // name
       expect(tournamentInfo[2]).to.equal("A test tournament"); // description
       expect(tournamentInfo[3]).to.equal("game1"); // gameId
-      expect(tournamentInfo[4]).to.equal(0); // tournamentType
-      expect(tournamentInfo[5]).to.equal(100); // maxParticipants
-      expect(tournamentInfo[9]).to.be.true; // isActive
-      expect(tournamentInfo[10]).to.equal(await mockToken.getAddress()); // rewardTokenAddress
-      expect(tournamentInfo[12]).to.equal(3); // positionCount
-      expect(tournamentInfo[13]).to.be.false; // hasEntryFee
-      expect(tournamentInfo[16]).to.equal(0); // participantCount
+      // tournamentType field removed from contract
+      expect(tournamentInfo[4]).to.equal(100); // maxParticipants
+      expect(tournamentInfo[8]).to.be.true; // isActive
+      expect(tournamentInfo[9]).to.equal(await mockToken.getAddress()); // rewardTokenAddress
+      expect(tournamentInfo[11]).to.equal(3); // positionCount
+      expect(tournamentInfo[12]).to.be.false; // hasEntryFee
+      expect(tournamentInfo[15]).to.equal(0); // participantCount
     });
 
     it("Should retrieve position info correctly", async function () {
