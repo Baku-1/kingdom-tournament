@@ -173,7 +173,6 @@ export class ContractService {
       tournamentData.name,
       tournamentData.description,
       tournamentData.gameId,
-      tournamentData.tournamentType === 'single-elimination' ? 0 : 1,
       0, // No fixed max participants - will be determined by actual registrations
       registrationEndTime,
       startTime,
@@ -442,7 +441,7 @@ export class ContractService {
       name: info.name,
       description: info.description,
       gameId: info.gameId,
-      tournamentType: info.tournamentType === 0 ? 'single-elimination' : 'double-elimination',
+      tournamentType: 'single-elimination', // Default to single-elimination since type was removed
       maxParticipants: Number(info.maxParticipants),
       createdAt: new Date(Number(info.createdAt) * 1000),
       startDate: new Date(Number(info.startTime) * 1000),
@@ -455,6 +454,7 @@ export class ContractService {
       hasEntryFee: info.hasEntryFee,
       entryFeeTokenAddress: info.entryFeeTokenAddress,
       entryFeeAmount: info.entryFeeAmount ? ethers.formatUnits(info.entryFeeAmount, 18) : '0',
+      feesDistributed: info.feesDistributed,
       participantCount: Number(info.participantCount),
       positionRewardAmounts: positionRewardAmounts.map((amount: bigint) =>
         ethers.formatUnits(amount, 18)

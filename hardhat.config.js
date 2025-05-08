@@ -1,5 +1,7 @@
+
 require("@nomicfoundation/hardhat-toolbox");
 require("@openzeppelin/hardhat-upgrades");
+require('dotenv').config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -16,9 +18,15 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 1337
+    },
+    roninTestnet: {
+      url: process.env.NEXT_PUBLIC_RONIN_RPC_URL || "https://saigon-api.roninchain.com/rpc",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 2021
     }
   },
   paths: {
     artifacts: "./src/artifacts"
   }
 };
+

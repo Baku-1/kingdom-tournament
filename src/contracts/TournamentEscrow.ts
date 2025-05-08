@@ -3,8 +3,8 @@ import { ethers } from 'ethers';
 // Contract ABI (Application Binary Interface)
 export const TOURNAMENT_ESCROW_ABI = [
   // Tournament creation
-  "function createTournament(string name, string description, string gameId, uint8 tournamentType, uint256 maxParticipants, uint256 registrationEndTime, uint256 startTime, address rewardTokenAddress, uint256[] positionRewardAmounts) payable returns (uint256)",
-  "function createTournamentWithEntryFee(string name, string description, string gameId, uint8 tournamentType, uint256 maxParticipants, uint256 registrationEndTime, uint256 startTime, address rewardTokenAddress, uint256[] positionRewardAmounts, address entryFeeTokenAddress, uint256 entryFeeAmount) payable returns (uint256)",
+  "function createTournament(string name, string description, string gameId, uint256 maxParticipants, uint256 registrationEndTime, uint256 startTime, address rewardTokenAddress, uint256[] positionRewardAmounts) payable returns (uint256)",
+  "function createTournamentWithEntryFee(string name, string description, string gameId, uint256 maxParticipants, uint256 registrationEndTime, uint256 startTime, address rewardTokenAddress, uint256[] positionRewardAmounts, address entryFeeTokenAddress, uint256 entryFeeAmount) payable returns (uint256)",
 
   // Tournament registration
   "function registerForTournament(uint256 tournamentId)",
@@ -21,7 +21,7 @@ export const TOURNAMENT_ESCROW_ABI = [
   "function cancelTournament(uint256 tournamentId)",
 
   // View functions
-  "function getTournamentInfo(uint256 tournamentId) view returns (address creator, string name, string description, string gameId, uint8 tournamentType, uint256 maxParticipants, uint256 createdAt, uint256 startTime, uint256 registrationEndTime, bool isActive, address rewardTokenAddress, uint256 totalRewardAmount, uint256 positionCount, bool hasEntryFee, address entryFeeTokenAddress, uint256 entryFeeAmount, uint256 participantCount)",
+  "function getTournamentInfo(uint256 tournamentId) view returns (address creator, string name, string description, string gameId, uint256 maxParticipants, uint256 createdAt, uint256 startTime, uint256 registrationEndTime, bool isActive, address rewardTokenAddress, uint256 totalRewardAmount, uint256 positionCount, bool hasEntryFee, address entryFeeTokenAddress, uint256 entryFeeAmount, bool feesDistributed, uint256 participantCount)",
   "function getPositionInfo(uint256 tournamentId, uint256 position) view returns (uint256 rewardAmount, address winner, bool claimed)",
   "function getPositionRewardAmounts(uint256 tournamentId) view returns (uint256[])",
   "function isParticipantRegistered(uint256 tournamentId, address participant) view returns (bool)",
@@ -33,7 +33,7 @@ export const TOURNAMENT_ESCROW_ABI = [
   "event WinnerDeclared(uint256 indexed tournamentId, uint256 position, address winner)",
   "event RewardClaimed(uint256 indexed tournamentId, uint256 position, address winner, uint256 amount)",
   "event TournamentCancelled(uint256 indexed tournamentId)",
-  "event EntryFeesCollected(uint256 indexed tournamentId, address indexed creator, uint256 amount)",
+  "event EntryFeesDistributed(uint256 indexed tournamentId, address indexed creator, uint256 creatorAmount, uint256 platformFeeAmount)",
   "event PlatformFeesWithdrawn(address indexed token, address indexed recipient, uint256 amount)",
   "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)"
 ];
