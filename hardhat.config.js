@@ -20,7 +20,7 @@ module.exports = {
       chainId: 1337
     },
     roninTestnet: {
-      url: process.env.NEXT_PUBLIC_RONIN_RPC_URL || "https://saigon-api.roninchain.com/rpc",
+      url: process.env.NEXT_PUBLIC_RONIN_RPC_URL || "https://api-testnet.skymavis.com/rpc",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 2021
     }
