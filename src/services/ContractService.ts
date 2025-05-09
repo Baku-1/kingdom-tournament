@@ -64,6 +64,8 @@ export class ContractService {
       TOURNAMENT_ESCROW_ADDRESS.testnet :
       TOURNAMENT_ESCROW_ADDRESS.mainnet;
 
+    console.log('Using contract address:', address);
+
     return new ethers.Contract(
       address,
       TOURNAMENT_ESCROW_ABI,

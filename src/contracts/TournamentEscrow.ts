@@ -38,13 +38,13 @@ export const TOURNAMENT_ESCROW_ABI = [
   "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)"
 ];
 
-// Contract addresses (to be updated after deployment)
+// Contract addresses from environment variables
 export const TOURNAMENT_ESCROW_ADDRESS = {
   // Ronin Mainnet
-  mainnet: "0x0000000000000000000000000000000000000000", // Replace after deployment
+  mainnet: process.env.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS || "0x0000000000000000000000000000000000000000",
 
   // Ronin Testnet (Saigon)
-  testnet: "0x0000000000000000000000000000000000000000"  // Replace after deployment
+  testnet: process.env.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS || "0x0000000000000000000000000000000000000000"
 };
 
 // ERC20 Token ABI (for token approvals)
