@@ -47,20 +47,12 @@ export const TOURNAMENT_ESCROW_ABI = [
   "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)"
 ];
 
-// Contract addresses from environment variables
-// Log the environment variable to help with debugging
-console.log('Environment variable NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS:', publicRuntimeConfig.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS);
-console.log('Environment variable NEXT_PUBLIC_NETWORK:', publicRuntimeConfig.NEXT_PUBLIC_NETWORK);
-
-// Use the environment variable if available, otherwise use the hardcoded value
-const testnetAddress = publicRuntimeConfig.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS || "0xfD7E4B1ED4d356dE286d9e2eD72D3dB2E4c2F36E";
-
+// Contract addresses
 export const TOURNAMENT_ESCROW_ADDRESS = {
   // Ronin Mainnet
   mainnet: "0x0000000000000000000000000000000000000000",
-
   // Ronin Testnet (Saigon)
-  testnet: testnetAddress
+  testnet: "0xfD7E4B1ED4d356dE286d9e2eD72D3dB2E4c2F36E"
 };
 
 // ERC20 Token ABI (for token approvals)

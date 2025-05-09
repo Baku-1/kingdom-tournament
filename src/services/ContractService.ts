@@ -4,13 +4,6 @@ import {
   TOURNAMENT_ESCROW_ADDRESS,
   ERC20_ABI
 } from '@/contracts/TournamentEscrow';
-import getConfig from 'next/config';
-
-// Get runtime config
-const { publicRuntimeConfig } = getConfig() || { publicRuntimeConfig: {} };
-
-// Environment configuration
-const IS_TESTNET = publicRuntimeConfig.NEXT_PUBLIC_NETWORK === 'testnet';
 
 // Constants for ethers v6
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -32,8 +25,8 @@ interface RoninConnector {
 export class ContractService {
   public provider: ethers.BrowserProvider | null = null;
   private signer: ethers.Signer | null = null;
-  // The connector is used in the setConnector method
   protected connector: RoninConnector | null = null;
+  private isTestnet: boolean = false;
 
   constructor() {
     // Provider will be set when connect is called with the connector
@@ -45,6 +38,11 @@ export class ContractService {
     if (connector && connector.provider) {
       this.provider = new ethers.BrowserProvider(connector.provider);
     }
+  }
+
+  // Set network type
+  setNetwork(isTestnet: boolean) {
+    this.isTestnet = isTestnet;
   }
 
   // Connect to wallet and get signer
@@ -64,13 +62,7 @@ export class ContractService {
       throw new Error('Provider not available');
     }
 
-    console.log('Environment config:', {
-      IS_TESTNET,
-      NEXT_PUBLIC_NETWORK: publicRuntimeConfig.NEXT_PUBLIC_NETWORK,
-      NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS: publicRuntimeConfig.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS
-    });
-
-    const address = IS_TESTNET ?
+    const address = this.isTestnet ?
       TOURNAMENT_ESCROW_ADDRESS.testnet :
       TOURNAMENT_ESCROW_ADDRESS.mainnet;
 
