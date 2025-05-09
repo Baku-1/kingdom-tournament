@@ -103,7 +103,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         contractService.setConnector(connector);
         
         // Set network type based on chain ID
-        const isTestnet = connectResult.chainId === 2021; // 2021 is Ronin testnet chain ID
+        // Ronin Mainnet: 2020, Ronin Testnet (Saigon): 2021
+        const isTestnet = connectResult.chainId === 2021;
+        console.log('Network type:', isTestnet ? 'testnet' : 'mainnet', 'Chain ID:', connectResult.chainId);
         contractService.setNetwork(isTestnet);
       }
 

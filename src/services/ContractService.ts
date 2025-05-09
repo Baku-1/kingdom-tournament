@@ -43,6 +43,7 @@ export class ContractService {
   // Set network type
   setNetwork(isTestnet: boolean) {
     this.isTestnet = isTestnet;
+    console.log('ContractService: Network set to', isTestnet ? 'testnet' : 'mainnet');
   }
 
   // Connect to wallet and get signer
@@ -66,7 +67,7 @@ export class ContractService {
       TOURNAMENT_ESCROW_ADDRESS.testnet :
       TOURNAMENT_ESCROW_ADDRESS.mainnet;
 
-    console.log('Using contract address:', address);
+    console.log('ContractService: Using contract address:', address, 'for', this.isTestnet ? 'testnet' : 'mainnet');
 
     try {
       return new ethers.Contract(
