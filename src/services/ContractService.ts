@@ -60,17 +60,28 @@ export class ContractService {
       throw new Error('Provider not available');
     }
 
+    console.log('Environment config:', {
+      IS_TESTNET,
+      NEXT_PUBLIC_NETWORK: process.env.NEXT_PUBLIC_NETWORK,
+      NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS: process.env.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS
+    });
+
     const address = IS_TESTNET ?
       TOURNAMENT_ESCROW_ADDRESS.testnet :
       TOURNAMENT_ESCROW_ADDRESS.mainnet;
 
     console.log('Using contract address:', address);
 
-    return new ethers.Contract(
-      address,
-      TOURNAMENT_ESCROW_ABI,
-      withSigner && this.signer ? this.signer : this.provider
-    );
+    try {
+      return new ethers.Contract(
+        address,
+        TOURNAMENT_ESCROW_ABI,
+        withSigner && this.signer ? this.signer : this.provider
+      );
+    } catch (error) {
+      console.error('Error creating contract instance:', error);
+      throw new Error(`Failed to create contract instance: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   // Get ERC20 token contract
@@ -180,33 +191,56 @@ export class ContractService {
       }
     }
 
-    // Create tournament
-    const tx = await contract.createTournament(
-      tournamentData.name,
-      tournamentData.description,
-      tournamentData.gameId,
-      0, // No fixed max participants - will be determined by actual registrations
-      registrationEndTime,
-      startTime,
-      rewardTokenAddress,
-      positionRewardAmounts,
-      {
-        value: rewardTokenAddress === ZERO_ADDRESS ? totalReward : 0
+    try {
+      console.log('Creating tournament with params:', {
+        name: tournamentData.name,
+        description: tournamentData.description,
+        gameId: tournamentData.gameId,
+        maxParticipants: 0,
+        registrationEndTime,
+        startTime,
+        rewardTokenAddress,
+        positionRewardAmountsLength: positionRewardAmounts.length,
+        value: rewardTokenAddress === ZERO_ADDRESS ? totalReward.toString() : '0'
+      });
+
+      // Create tournament
+      const tx = await contract.createTournament(
+        tournamentData.name,
+        tournamentData.description,
+        tournamentData.gameId,
+        0, // No fixed max participants - will be determined by actual registrations
+        registrationEndTime,
+        startTime,
+        rewardTokenAddress,
+        positionRewardAmounts,
+        {
+          value: rewardTokenAddress === ZERO_ADDRESS ? totalReward : 0
+        }
+      );
+
+      console.log('Transaction sent:', tx.hash);
+      const receipt = await tx.wait();
+      console.log('Transaction confirmed:', receipt);
+
+      // Find tournament ID from event
+      const event = receipt.logs.find((log: ethers.Log) => {
+        const parsedLog = contract.interface.parseLog(log);
+        return parsedLog?.name === 'TournamentCreated';
+      });
+
+      const parsedEvent = event ? contract.interface.parseLog(event) : null;
+      const tournamentId = parsedEvent?.args?.tournamentId?.toString();
+
+      if (!tournamentId) {
+        console.error('Tournament created but could not find tournament ID in events');
       }
-    );
 
-    const receipt = await tx.wait();
-
-    // Find tournament ID from event
-    const event = receipt.logs.find((log: ethers.Log) => {
-      const parsedLog = contract.interface.parseLog(log);
-      return parsedLog?.name === 'TournamentCreated';
-    });
-
-    const parsedEvent = event ? contract.interface.parseLog(event) : null;
-    const tournamentId = parsedEvent?.args?.tournamentId?.toString();
-
-    return tournamentId;
+      return tournamentId;
+    } catch (error) {
+      console.error('Error creating tournament:', error);
+      throw new Error(`Failed to create tournament: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   // Declare winner
@@ -265,13 +299,25 @@ export class ContractService {
 
   // Get minimum registration period
   async getMinRegistrationPeriod() {
-    const contract = this.getTournamentEscrowContract();
-    return await contract.MIN_REGISTRATION_PERIOD();
+    try {
+      const contract = this.getTournamentEscrowContract();
+      return await contract.MIN_REGISTRATION_PERIOD();
+    } catch (error) {
+      console.error('Error getting MIN_REGISTRATION_PERIOD:', error);
+      // Default to 1 hour (in seconds) if the contract call fails
+      return 3600;
+    }
   }
 
   async getPlatformFee() {
-    const contract = this.getTournamentEscrowContract();
-    return await contract.PLATFORM_FEE_PERCENTAGE();
+    try {
+      const contract = this.getTournamentEscrowContract();
+      return await contract.PLATFORM_FEE_PERCENTAGE();
+    } catch (error) {
+      console.error('Error getting PLATFORM_FEE_PERCENTAGE:', error);
+      // Default to 2.5% if the contract call fails
+      return 250;
+    }
   }
 
   async getPlatformFees() {
@@ -311,9 +357,23 @@ export class ContractService {
 
   // Check if registration period is valid
   async validateRegistrationPeriod(registrationEndTime: number) {
-    const minPeriod = await this.getMinRegistrationPeriod();
-    const currentTime = Math.floor(Date.now() / 1000);
-    return registrationEndTime - currentTime >= Number(minPeriod);
+    try {
+      const minPeriod = await this.getMinRegistrationPeriod();
+      const currentTime = Math.floor(Date.now() / 1000);
+      console.log('Validating registration period:', {
+        registrationEndTime,
+        currentTime,
+        minPeriod,
+        difference: registrationEndTime - currentTime,
+        isValid: registrationEndTime - currentTime >= Number(minPeriod)
+      });
+      return registrationEndTime - currentTime >= Number(minPeriod);
+    } catch (error) {
+      console.error('Error validating registration period:', error);
+      // Default to requiring at least 1 hour
+      const currentTime = Math.floor(Date.now() / 1000);
+      return registrationEndTime - currentTime >= 3600;
+    }
   }
 
   // Claim reward
