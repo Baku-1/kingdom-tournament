@@ -37,6 +37,9 @@ export class ContractService {
     this.connector = connector;
     if (connector && connector.provider) {
       this.provider = new ethers.BrowserProvider(connector.provider);
+      console.log('ContractService: Provider initialized');
+    } else {
+      console.error('ContractService: Failed to initialize provider - invalid connector');
     }
   }
 
@@ -60,7 +63,8 @@ export class ContractService {
   // Get tournament escrow contract
   getTournamentEscrowContract(withSigner = false) {
     if (!this.provider) {
-      throw new Error('Provider not available');
+      console.error('ContractService: Provider not available');
+      throw new Error('Provider not available. Please connect your wallet first.');
     }
 
     const address = this.isTestnet ?
@@ -70,11 +74,12 @@ export class ContractService {
     console.log('ContractService: Using contract address:', address, 'for', this.isTestnet ? 'testnet' : 'mainnet');
 
     try {
-      return new ethers.Contract(
+      const contract = new ethers.Contract(
         address,
         TOURNAMENT_ESCROW_ABI,
         withSigner && this.signer ? this.signer : this.provider
       );
+      return contract;
     } catch (error) {
       console.error('Error creating contract instance:', error);
       throw new Error(`Failed to create contract instance: ${error instanceof Error ? error.message : String(error)}`);
@@ -297,23 +302,35 @@ export class ContractService {
   // Get minimum registration period
   async getMinRegistrationPeriod() {
     try {
+      if (!this.provider) {
+        throw new Error('Provider not available. Please connect your wallet first.');
+      }
+
       const contract = this.getTournamentEscrowContract();
-      return await contract.MIN_REGISTRATION_PERIOD();
+      const minPeriod = await contract.MIN_REGISTRATION_PERIOD();
+      console.log('ContractService: MIN_REGISTRATION_PERIOD:', minPeriod.toString());
+      return minPeriod;
     } catch (error) {
       console.error('Error getting MIN_REGISTRATION_PERIOD:', error);
       // Default to 1 hour (in seconds) if the contract call fails
-      return 3600;
+      return BigInt(3600);
     }
   }
 
   async getPlatformFee() {
     try {
+      if (!this.provider) {
+        throw new Error('Provider not available. Please connect your wallet first.');
+      }
+
       const contract = this.getTournamentEscrowContract();
-      return await contract.PLATFORM_FEE_PERCENTAGE();
+      const fee = await contract.PLATFORM_FEE_PERCENTAGE();
+      console.log('ContractService: PLATFORM_FEE_PERCENTAGE:', fee.toString());
+      return fee;
     } catch (error) {
       console.error('Error getting PLATFORM_FEE_PERCENTAGE:', error);
       // Default to 2.5% if the contract call fails
-      return 250;
+      return BigInt(250);
     }
   }
 

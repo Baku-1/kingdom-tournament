@@ -65,9 +65,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             // Get current chain
             const chainId = await newConnector.getChainId();
             setCurrentChainId(chainId);
+            
+            // Set network type based on chain ID
+            const isTestnet = chainId === 2021; // 2021 is Ronin testnet chain ID
+            console.log('WalletProvider: Network type:', isTestnet ? 'testnet' : 'mainnet', 'Chain ID:', chainId);
+            contractService.setNetwork(isTestnet);
           }
-        } catch {
-          // Not connected, which is fine
+        } catch (err) {
+          console.error('Error checking connection status:', err);
         }
       } catch (err) {
         if (err instanceof ConnectorError) {
@@ -103,9 +108,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         contractService.setConnector(connector);
         
         // Set network type based on chain ID
-        // Ronin Mainnet: 2020, Ronin Testnet (Saigon): 2021
-        const isTestnet = connectResult.chainId === 2021;
-        console.log('Network type:', isTestnet ? 'testnet' : 'mainnet', 'Chain ID:', connectResult.chainId);
+        const isTestnet = connectResult.chainId === 2021; // 2021 is Ronin testnet chain ID
+        console.log('WalletProvider: Network type:', isTestnet ? 'testnet' : 'mainnet', 'Chain ID:', connectResult.chainId);
         contractService.setNetwork(isTestnet);
       }
 
