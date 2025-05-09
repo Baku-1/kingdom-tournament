@@ -28,7 +28,8 @@ interface RoninConnector {
 export class ContractService {
   public provider: ethers.BrowserProvider | null = null;
   private signer: ethers.Signer | null = null;
-  private connector: RoninConnector | null = null;
+  // The connector is used in the setConnector method
+  protected connector: RoninConnector | null = null;
 
   constructor() {
     // Provider will be set when connect is called with the connector
@@ -540,18 +541,38 @@ export class ContractService {
     return participants;
   }
 
-  async getAllTournaments(): Promise<any[]> {
+  async getAllTournaments(): Promise<{
+    id: string;
+    creator: string;
+    name: string;
+    description: string;
+    gameId: string;
+    tournamentType: string;
+    maxParticipants: number;
+    createdAt: Date;
+    startTime: number;
+    registrationEndTime: number;
+    isActive: boolean;
+    rewardTokenAddress: string;
+    totalRewardAmount: bigint;
+    positionCount: number;
+    hasEntryFee: boolean;
+    entryFeeTokenAddress: string;
+    entryFeeAmount: bigint;
+    feesDistributed: boolean;
+    participantCount: number;
+  }[]> {
     const contract = this.getTournamentEscrowContract();
-    
+
     try {
       const tournamentCount = await contract.getTournamentCount();
       const tournaments = [];
-      
+
       for (let i = 0; i < tournamentCount; i++) {
         const tournament = await contract.getTournamentInfo(i);
         tournaments.push(tournament);
       }
-      
+
       return tournaments;
     } catch (error) {
       console.error('Error getting all tournaments:', error);

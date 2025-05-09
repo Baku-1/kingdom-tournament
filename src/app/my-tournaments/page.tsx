@@ -5,61 +5,9 @@ import { useWallet } from '@/providers/WalletProvider';
 import Link from 'next/link';
 import { SUPPORTED_GAMES } from '@/config/ronin';
 import { contractService } from '@/services/ContractService';
-import { ethers, BigNumberish } from 'ethers';
+import { ethers } from 'ethers';
 
-// Mock data for tournaments
-const MOCK_CREATED_TOURNAMENTS = [
-  {
-    id: '1',
-    name: 'Axie Infinity Championship',
-    description: 'Compete in the ultimate Axie Infinity tournament for RON tokens!',
-    game: 'axie-infinity',
-    creator: '0x1234567890abcdef1234567890abcdef12345678',
-    tournamentType: 'single-elimination',
-    maxParticipants: 16,
-    currentParticipants: 8,
-    startDate: new Date(Date.now() + 86400000 * 3), // 3 days from now
-    registrationEndDate: new Date(Date.now() + 86400000 * 2), // 2 days from now
-    status: 'registration',
-    rewardType: 'token',
-    rewardAmount: '1000',
-    rewardToken: 'RON',
-  },
-];
-
-const MOCK_JOINED_TOURNAMENTS = [
-  {
-    id: '2',
-    name: 'Pixels Weekly Tournament',
-    description: 'Weekly tournament for Pixels players with NFT rewards',
-    game: 'pixels',
-    creator: '0xabcdef1234567890abcdef1234567890abcdef12',
-    tournamentType: 'double-elimination',
-    maxParticipants: 32,
-    currentParticipants: 20,
-    startDate: new Date(Date.now() + 86400000 * 1), // 1 day from now
-    registrationEndDate: new Date(Date.now() + 3600000 * 12), // 12 hours from now
-    status: 'registration',
-    rewardType: 'nft',
-    rewardNftName: 'Rare Pixel Character',
-  },
-  {
-    id: '3',
-    name: 'Moshi Admirals',
-    description: 'Battle to the finish in this high-stakes tournament',
-    game: 'moshi-admiral',
-    creator: '0x7890abcdef1234567890abcdef1234567890abcd',
-    tournamentType: 'single-elimination',
-    maxParticipants: 32,
-    currentParticipants: 8,
-    startDate: new Date(Date.now() - 86400000 * 1), // 1 day ago
-    registrationEndDate: new Date(Date.now() - 86400000 * 2), // 2 days ago
-    status: 'active',
-    rewardType: 'token',
-    rewardAmount: '500',
-    rewardToken: 'RON',
-  },
-];
+// Tournament data will be fetched from the contract
 
 interface GameInfo {
   id: string;
@@ -68,20 +16,25 @@ interface GameInfo {
 }
 
 interface ContractTournament {
-  id: BigNumberish;
+  id: string;
+  creator: string;
   name: string;
   description: string;
   gameId: string;
-  creator: string;
   tournamentType: string;
-  maxParticipants: BigNumberish;
-  participantCount: BigNumberish;
-  startTime: BigNumberish;
-  registrationEndTime: BigNumberish;
+  maxParticipants: number;
+  createdAt: Date;
+  startTime: number;
+  registrationEndTime: number;
   isActive: boolean;
   rewardTokenAddress: string;
-  totalRewardAmount: BigNumberish;
-  rewardType: 'token' | 'nft';
+  totalRewardAmount: bigint;
+  positionCount: number;
+  hasEntryFee: boolean;
+  entryFeeTokenAddress: string;
+  entryFeeAmount: bigint;
+  feesDistributed: boolean;
+  participantCount: number;
 }
 
 interface Tournament {
@@ -109,20 +62,49 @@ export default function MyTournaments() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('created');
 
+  // Get tournament status based on timestamps and active state
+  const getTournamentStatus = (tournament: ContractTournament): string => {
+    const now = Math.floor(Date.now() / 1000);
+    if (!tournament.isActive) return 'completed';
+    if (Number(tournament.startTime) <= now) return 'active';
+    return 'registration';
+  };
+
   // Fetch tournaments when wallet connects
   useEffect(() => {
+    // Format tournament data from contract (moved inside useEffect to avoid dependency issues)
+    const formatTournamentData = (tournament: ContractTournament): Tournament => {
+      return {
+        id: tournament.id.toString(),
+        name: tournament.name,
+        description: tournament.description,
+        game: tournament.gameId,
+        creator: tournament.creator,
+        tournamentType: tournament.tournamentType,
+        maxParticipants: Number(tournament.maxParticipants),
+        currentParticipants: Number(tournament.participantCount),
+        startDate: new Date(Number(tournament.startTime) * 1000),
+        registrationEndDate: new Date(Number(tournament.registrationEndTime) * 1000),
+        status: getTournamentStatus(tournament),
+        rewardType: tournament.rewardTokenAddress === ethers.ZeroAddress ? 'nft' : 'token',
+        rewardAmount: tournament.rewardTokenAddress !== ethers.ZeroAddress ? ethers.formatEther(tournament.totalRewardAmount) : undefined,
+        rewardToken: tournament.rewardTokenAddress !== ethers.ZeroAddress ? 'RON' : undefined,
+        rewardNftName: tournament.rewardTokenAddress === ethers.ZeroAddress ? 'Tournament NFT' : undefined,
+      };
+    };
+
     const fetchTournaments = async () => {
       if (!connectedAddress) return;
 
       try {
         setIsLoading(true);
-        
+
         // Get all tournaments from contract
         const allTournaments = await contractService.getAllTournaments();
-        
+
         // Filter created tournaments
         const created = allTournaments
-          .filter((t: ContractTournament) => 
+          .filter((t: ContractTournament) =>
             t.creator.toLowerCase() === connectedAddress.toLowerCase()
           )
           .map(formatTournamentData);
@@ -146,35 +128,6 @@ export default function MyTournaments() {
 
     fetchTournaments();
   }, [connectedAddress]);
-
-  // Format tournament data from contract
-  const formatTournamentData = (tournament: ContractTournament): Tournament => {
-    return {
-      id: tournament.id.toString(),
-      name: tournament.name,
-      description: tournament.description,
-      game: tournament.gameId,
-      creator: tournament.creator,
-      tournamentType: tournament.tournamentType,
-      maxParticipants: Number(tournament.maxParticipants),
-      currentParticipants: Number(tournament.participantCount),
-      startDate: new Date(Number(tournament.startTime) * 1000),
-      registrationEndDate: new Date(Number(tournament.registrationEndTime) * 1000),
-      status: getTournamentStatus(tournament),
-      rewardType: tournament.rewardTokenAddress === ethers.ZeroAddress ? 'nft' : 'token',
-      rewardAmount: tournament.rewardType === 'token' ? ethers.formatEther(tournament.totalRewardAmount) : undefined,
-      rewardToken: tournament.rewardType === 'token' ? 'RON' : undefined,
-      rewardNftName: tournament.rewardType === 'nft' ? 'Tournament NFT' : undefined,
-    };
-  };
-
-  // Get tournament status based on timestamps and active state
-  const getTournamentStatus = (tournament: ContractTournament): string => {
-    const now = Math.floor(Date.now() / 1000);
-    if (!tournament.isActive) return 'completed';
-    if (Number(tournament.startTime) <= now) return 'active';
-    return 'registration';
-  };
 
   // Format date for display
   const formatDate = (date: Date) => {
