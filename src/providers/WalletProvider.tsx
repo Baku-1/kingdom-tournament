@@ -73,6 +73,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           }
         } catch (err) {
           console.error('Error checking connection status:', err);
+          // If it's a postMessage error, try to reconnect
+          if (err instanceof Error && err.message.includes('postMessage')) {
+            console.log('Attempting to reconnect due to postMessage error...');
+            // Wait a bit before trying to reconnect
+            setTimeout(() => {
+              initializeConnector();
+            }, 1000);
+          }
         }
       } catch (err) {
         if (err instanceof ConnectorError) {
@@ -99,23 +107,36 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         throw new Error("No connector available");
       }
 
-      const connectResult = await connector.connect();
-      if (connectResult) {
-        setConnectedAddress(connectResult.account);
-        setCurrentChainId(connectResult.chainId);
+      try {
+        const connectResult = await connector.connect();
+        if (connectResult) {
+          setConnectedAddress(connectResult.account);
+          setCurrentChainId(connectResult.chainId);
 
-        // Update the connector in the ContractService
-        contractService.setConnector(connector);
-        
-        // Set network type based on chain ID
-        const isTestnet = connectResult.chainId === 2021; // 2021 is Ronin testnet chain ID
-        console.log('WalletProvider: Network type:', isTestnet ? 'testnet' : 'mainnet', 'Chain ID:', connectResult.chainId);
-        contractService.setNetwork(isTestnet);
-      }
+          // Update the connector in the ContractService
+          contractService.setConnector(connector);
+          
+          // Set network type based on chain ID
+          const isTestnet = connectResult.chainId === 2021; // 2021 is Ronin testnet chain ID
+          console.log('WalletProvider: Network type:', isTestnet ? 'testnet' : 'mainnet', 'Chain ID:', connectResult.chainId);
+          contractService.setNetwork(isTestnet);
+        }
 
-      const accounts = await connector.getAccounts();
-      if (accounts) {
-        setUserAddresses(accounts);
+        const accounts = await connector.getAccounts();
+        if (accounts) {
+          setUserAddresses(accounts);
+        }
+      } catch (err) {
+        // If it's a postMessage error, try to reconnect
+        if (err instanceof Error && err.message.includes('postMessage')) {
+          console.log('Attempting to reconnect due to postMessage error...');
+          // Wait a bit before trying to reconnect
+          setTimeout(() => {
+            connectWallet();
+          }, 1000);
+          return;
+        }
+        throw err;
       }
     } catch (err) {
       console.error("Error connecting wallet:", err);
