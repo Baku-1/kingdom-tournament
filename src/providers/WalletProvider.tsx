@@ -73,18 +73,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           }
         } catch (err) {
           console.error('Error checking connection status:', err);
-          // If it's a postMessage error, try to reconnect
+          // If it's a postMessage error, try to reconnect with a delay
           if (err instanceof Error && err.message.includes('postMessage')) {
             console.log('Attempting to reconnect due to postMessage error...');
             // Wait a bit before trying to reconnect
             setTimeout(() => {
               initializeConnector();
-            }, 1000);
+            }, 2000); // Increased delay to 2 seconds
           }
         }
       } catch (err) {
         if (err instanceof ConnectorError) {
           setError(err.name);
+          // If it's a provider not found error, open the wallet download page
+          if (err.name === ConnectorErrorType.PROVIDER_NOT_FOUND) {
+            window.open("https://wallet.roninchain.com", "_blank");
+          }
         }
       }
     };
@@ -127,13 +131,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           setUserAddresses(accounts);
         }
       } catch (err) {
-        // If it's a postMessage error, try to reconnect
+        // If it's a postMessage error, try to reconnect with a delay
         if (err instanceof Error && err.message.includes('postMessage')) {
           console.log('Attempting to reconnect due to postMessage error...');
           // Wait a bit before trying to reconnect
           setTimeout(() => {
             connectWallet();
-          }, 1000);
+          }, 2000); // Increased delay to 2 seconds
           return;
         }
         throw err;
