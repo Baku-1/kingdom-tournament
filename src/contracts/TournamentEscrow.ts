@@ -44,15 +44,15 @@ export const TOURNAMENT_ESCROW_ABI = [
 ];
 
 // Contract addresses from environment variables
-const contractAddress = process.env.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS || "0x0000000000000000000000000000000000000000";
-console.log('Loading contract address from env:', contractAddress);
+// Log the environment variable to help with debugging
+console.log('Environment variable NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS:', process.env.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS);
 
 export const TOURNAMENT_ESCROW_ADDRESS = {
   // Ronin Mainnet
-  mainnet: contractAddress,
+  mainnet: "0x0000000000000000000000000000000000000000",
 
   // Ronin Testnet (Saigon)
-  testnet: contractAddress
+  testnet: "0xfD7E4B1ED4d356dE286d9e2eD72D3dB2E4c2F36E"
 };
 
 // ERC20 Token ABI (for token approvals)
