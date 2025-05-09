@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { SUPPORTED_GAMES, TOURNAMENT_TYPES } from '@/config/ronin';
 import { contractService } from '@/services/ContractService';
 import { ethers } from 'ethers';
+import { getTokenAddresses } from '@/config/tokens';
 
 type TokenBalances = {
   RON: string;
@@ -82,7 +83,6 @@ export default function CreateTournament() {
 
   // Fetch balances when wallet connects
   useEffect(() => {
-    // Fetch wallet balances (moved inside useEffect to avoid dependency issues)
     const fetchWalletBalances = async () => {
       if (!connectedAddress) return;
 
@@ -98,15 +98,14 @@ export default function CreateTournament() {
         }));
 
         // Get ERC20 token balances
-        const tokenAddresses: TokenAddresses = {
+        const tokenAddresses = getTokenAddresses(contractService.isTestnet);
+        const tokenAddressesWithRON: TokenAddresses = {
           RON: connectedAddress,
-          AXS: '0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44', // AXS token on Saigon testnet
-          SLP: '0x2C89bbc92BD86F80c154c6Bead4B1C3bB0C4b911', // SLP token on Saigon testnet
-          USDC: '0x0b7007c13325c48911f73a2dad5fa5dcbf808adc' // USDC token on Saigon testnet
+          ...tokenAddresses
         };
 
         // Fetch each token balance
-        for (const [token, address] of Object.entries(tokenAddresses)) {
+        for (const [token, address] of Object.entries(tokenAddressesWithRON)) {
           if (token === 'RON') continue; // Skip RON as we already got it
 
           try {
@@ -151,7 +150,7 @@ export default function CreateTournament() {
     if (connectedAddress) {
       fetchWalletBalances();
     }
-  }, [connectedAddress]);
+  }, [connectedAddress, contractService.provider, contractService.isTestnet]);
 
   // Validate registration period
   const validateRegistrationPeriod = (endDate: string) => {
@@ -252,25 +251,66 @@ export default function CreateTournament() {
 
   // Update token address based on selected token
   useEffect(() => {
-    // Token addresses from Ronin blockchain
-    const tokenAddresses: TokenAddresses = {
-      RON: connectedAddress || '', // RON is the native token, so we use the wallet address
-      AXS: '0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44', // AXS token on Saigon testnet
-      SLP: '0x2C89bbc92BD86F80c154c6Bead4B1C3bB0C4b911', // SLP token on Saigon testnet
-      USDC: '0x0b7007c13325c48911f73a2dad5fa5dcbf808adc' // USDC token on Saigon testnet
-    };
-
-    // Only set the token address if the token is selected and the address exists
-    if (selectedToken) {
+    if (selectedToken && contractService.provider) {
       if (selectedToken === 'RON') {
-        // For RON, use the connected address
         setTokenAddress(connectedAddress || '');
-      } else if (tokenAddresses[selectedToken]) {
-        // For other tokens, verify they exist before setting
-        setTokenAddress(tokenAddresses[selectedToken]);
+      } else {
+        const tokenAddresses = getTokenAddresses(Boolean(contractService.isTestnet));
+        setTokenAddress(tokenAddresses[selectedToken as keyof typeof tokenAddresses] || '');
       }
     }
-  }, [selectedToken, connectedAddress]);
+  }, [selectedToken, contractService.provider, contractService.isTestnet, connectedAddress]);
+
+  // Update the useEffect for fetching token balances
+  useEffect(() => {
+    const fetchTokenBalances = async () => {
+      if (!connectedAddress || !contractService.provider) return;
+
+      try {
+        // Get RON balance (native token)
+        const ronBalance = await contractService.provider.getBalance(connectedAddress);
+        setWalletBalances(prev => ({
+          ...prev,
+          RON: ethers.formatEther(ronBalance)
+        }));
+
+        // Get ERC20 token balances
+        const tokenAddresses = getTokenAddresses(Boolean(contractService.isTestnet));
+        
+        // Fetch each token balance
+        for (const [token, address] of Object.entries(tokenAddresses)) {
+          try {
+            // Check if the contract exists and has code at the address
+            const code = await contractService.provider.getCode(address);
+            if (code === '0x') {
+              console.log(`No contract found at address ${address} for token ${token}`);
+              continue; // Skip this token if no contract exists
+            }
+
+            const tokenContract = contractService.getERC20Contract(address);
+            const balance = await tokenContract.balanceOf(connectedAddress);
+            setWalletBalances(prev => ({
+              ...prev,
+              [token]: ethers.formatUnits(balance, 18)
+            }));
+          } catch (error) {
+            console.warn(`Error fetching balance for ${token}:`, error);
+            // Set balance to 0 if there's an error
+            setWalletBalances(prev => ({
+              ...prev,
+              [token]: '0'
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching wallet balances:', error);
+      }
+    };
+
+    if (connectedAddress) {
+      fetchTokenBalances();
+    }
+  }, [connectedAddress, contractService.provider, contractService.isTestnet]);
 
   if (!connectedAddress) {
     return (

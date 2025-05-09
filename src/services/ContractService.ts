@@ -26,7 +26,7 @@ export class ContractService {
   public provider: ethers.BrowserProvider | null = null;
   private signer: ethers.Signer | null = null;
   protected connector: RoninConnector | null = null;
-  private isTestnet: boolean = false;
+  public isTestnet: boolean = false;
 
   constructor() {
     // Provider will be set when connect is called with the connector
