@@ -178,11 +178,11 @@ export class ContractService {
       // Check if approval is needed
       const currentAllowance = await tokenContract.allowance(
         await this.signer.getAddress(),
-        contract.address
+        contract.target
       );
 
       if (currentAllowance < totalReward) {
-        const approveTx = await tokenContract.approve(contract.address, totalReward);
+        const approveTx = await tokenContract.approve(contract.target, totalReward);
         await approveTx.wait();
       }
     }
@@ -440,11 +440,11 @@ export class ContractService {
       // Check if approval is needed
       const currentAllowance = await tokenContract.allowance(
         await this.signer.getAddress(),
-        contract.address
+        contract.target
       );
 
       if (currentAllowance < entryFeeAmountBigInt) {
-        const approveTx = await tokenContract.approve(contract.address, entryFeeAmountBigInt);
+        const approveTx = await tokenContract.approve(contract.target, entryFeeAmountBigInt);
         await approveTx.wait();
       }
 
