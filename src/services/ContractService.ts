@@ -4,9 +4,13 @@ import {
   TOURNAMENT_ESCROW_ADDRESS,
   ERC20_ABI
 } from '@/contracts/TournamentEscrow';
+import getConfig from 'next/config';
+
+// Get runtime config
+const { publicRuntimeConfig } = getConfig() || { publicRuntimeConfig: {} };
 
 // Environment configuration
-const IS_TESTNET = process.env.NEXT_PUBLIC_NETWORK === 'testnet';
+const IS_TESTNET = publicRuntimeConfig.NEXT_PUBLIC_NETWORK === 'testnet';
 
 // Constants for ethers v6
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -62,8 +66,8 @@ export class ContractService {
 
     console.log('Environment config:', {
       IS_TESTNET,
-      NEXT_PUBLIC_NETWORK: process.env.NEXT_PUBLIC_NETWORK,
-      NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS: process.env.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS
+      NEXT_PUBLIC_NETWORK: publicRuntimeConfig.NEXT_PUBLIC_NETWORK,
+      NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS: publicRuntimeConfig.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS
     });
 
     const address = IS_TESTNET ?
