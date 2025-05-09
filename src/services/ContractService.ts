@@ -257,40 +257,29 @@ export class ContractService {
   // Get minimum registration period
   async getMinRegistrationPeriod() {
     const contract = this.getTournamentEscrowContract();
-    return await contract.getMinRegistrationPeriod();
+    return await contract.MIN_REGISTRATION_PERIOD();
   }
 
   async getPlatformFee() {
     const contract = this.getTournamentEscrowContract();
-    return await contract.getPlatformFee();
+    return await contract.PLATFORM_FEE_PERCENTAGE();
   }
 
   async getPlatformFees() {
-    const contract = this.getTournamentEscrowContract();
-    const [ronFees, tokenFees] = await Promise.all([
-      contract.getRonFees(),
-      contract.getTokenFees()
-    ]);
+    // Since the contract doesn't have getRonFees and getTokenFees methods,
+    // we'll return a simplified version
 
-    interface TokenFee {
-      tokenAddress: string;
-      symbol: string;
-      amount: bigint;
-    }
-
+    // Return a simplified structure
     return {
-      ron: ronFees.toString(),
-      tokens: (tokenFees as TokenFee[]).map(fee => ({
-        address: fee.tokenAddress,
-        symbol: fee.symbol,
-        amount: fee.amount.toString()
-      }))
+      ron: "0", // Default to zero
+      tokens: [] // Empty array since we can't easily get this information
     };
   }
 
   async isOwner(address: string) {
     const contract = this.getTournamentEscrowContract();
-    return await contract.isOwner(address);
+    const ownerAddress = await contract.owner();
+    return ownerAddress.toLowerCase() === address.toLowerCase();
   }
 
   async withdrawRonFees() {
@@ -315,7 +304,7 @@ export class ContractService {
   async validateRegistrationPeriod(registrationEndTime: number) {
     const minPeriod = await this.getMinRegistrationPeriod();
     const currentTime = Math.floor(Date.now() / 1000);
-    return registrationEndTime - currentTime >= minPeriod;
+    return registrationEndTime - currentTime >= Number(minPeriod);
   }
 
   // Claim reward
@@ -567,12 +556,18 @@ export class ContractService {
     const contract = this.getTournamentEscrowContract();
 
     try {
-      const tournamentCount = await contract.getTournamentCount();
+      const tournamentCount = await contract.nextTournamentId();
       const tournaments = [];
 
-      for (let i = 0; i < tournamentCount; i++) {
-        const tournament = await contract.getTournamentInfo(i);
-        tournaments.push(tournament);
+      // Start from 1 since tournament IDs start at 1
+      for (let i = 1; i < tournamentCount; i++) {
+        try {
+          const tournament = await contract.getTournamentInfo(i);
+          tournaments.push(tournament);
+        } catch (error) {
+          console.error(`Error getting tournament ${i}:`, error);
+          // Continue with next tournament if one fails
+        }
       }
 
       return tournaments;

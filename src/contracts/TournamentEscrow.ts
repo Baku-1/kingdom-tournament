@@ -26,6 +26,11 @@ export const TOURNAMENT_ESCROW_ABI = [
   "function getPositionRewardAmounts(uint256 tournamentId) view returns (uint256[])",
   "function isParticipantRegistered(uint256 tournamentId, address participant) view returns (bool)",
   "function MIN_REGISTRATION_PERIOD() view returns (uint256)",
+  "function PLATFORM_FEE_PERCENTAGE() view returns (uint256)",
+  "function PERCENTAGE_BASE() view returns (uint256)",
+  "function MAX_WINNER_POSITIONS() view returns (uint256)",
+  "function owner() view returns (address)",
+  "function nextTournamentId() view returns (uint256)",
 
   // Events
   "event TournamentCreated(uint256 indexed tournamentId, address indexed creator, string name)",
@@ -39,12 +44,15 @@ export const TOURNAMENT_ESCROW_ABI = [
 ];
 
 // Contract addresses from environment variables
+const contractAddress = process.env.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS || "0x0000000000000000000000000000000000000000";
+console.log('Loading contract address from env:', contractAddress);
+
 export const TOURNAMENT_ESCROW_ADDRESS = {
   // Ronin Mainnet
-  mainnet: process.env.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS || "0x0000000000000000000000000000000000000000",
+  mainnet: contractAddress,
 
   // Ronin Testnet (Saigon)
-  testnet: process.env.NEXT_PUBLIC_TOURNAMENT_ESCROW_ADDRESS || "0x0000000000000000000000000000000000000000"
+  testnet: contractAddress
 };
 
 // ERC20 Token ABI (for token approvals)
