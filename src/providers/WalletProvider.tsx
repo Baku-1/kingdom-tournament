@@ -65,30 +65,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             // Get current chain
             const chainId = await newConnector.getChainId();
             setCurrentChainId(chainId);
-            
-            // Set network type based on chain ID
-            const isTestnet = chainId === 2021; // 2021 is Ronin testnet chain ID
-            console.log('WalletProvider: Network type:', isTestnet ? 'testnet' : 'mainnet', 'Chain ID:', chainId);
-            contractService.setNetwork(isTestnet);
           }
-        } catch (err) {
-          console.error('Error checking connection status:', err);
-          // If it's a postMessage error, try to reconnect with a delay
-          if (err instanceof Error && err.message.includes('postMessage')) {
-            console.log('Attempting to reconnect due to postMessage error...');
-            // Wait a bit before trying to reconnect
-            setTimeout(() => {
-              initializeConnector();
-            }, 2000); // Increased delay to 2 seconds
-          }
+        } catch {
+          // Not connected, which is fine
         }
       } catch (err) {
         if (err instanceof ConnectorError) {
           setError(err.name);
-          // If it's a provider not found error, open the wallet download page
-          if (err.name === ConnectorErrorType.PROVIDER_NOT_FOUND) {
-            window.open("https://wallet.roninchain.com", "_blank");
-          }
         }
       }
     };
@@ -111,36 +94,22 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         throw new Error("No connector available");
       }
 
-      try {
-        const connectResult = await connector.connect();
-        if (connectResult) {
-          setConnectedAddress(connectResult.account);
-          setCurrentChainId(connectResult.chainId);
+      const connectResult = await connector.connect();
+      if (connectResult) {
+        setConnectedAddress(connectResult.account);
+        setCurrentChainId(connectResult.chainId);
 
-          // Update the connector in the ContractService
-          contractService.setConnector(connector);
-          
-          // Set network type based on chain ID
-          const isTestnet = connectResult.chainId === 2021; // 2021 is Ronin testnet chain ID
-          console.log('WalletProvider: Network type:', isTestnet ? 'testnet' : 'mainnet', 'Chain ID:', connectResult.chainId);
-          contractService.setNetwork(isTestnet);
-        }
+        // Update the connector in the ContractService
+        contractService.setConnector(connector);
+        
+        // Set network type based on chain ID
+        const isTestnet = connectResult.chainId === 2021; // 2021 is Ronin testnet chain ID
+        contractService.setNetwork(isTestnet);
+      }
 
-        const accounts = await connector.getAccounts();
-        if (accounts) {
-          setUserAddresses(accounts);
-        }
-      } catch (err) {
-        // If it's a postMessage error, try to reconnect with a delay
-        if (err instanceof Error && err.message.includes('postMessage')) {
-          console.log('Attempting to reconnect due to postMessage error...');
-          // Wait a bit before trying to reconnect
-          setTimeout(() => {
-            connectWallet();
-          }, 2000); // Increased delay to 2 seconds
-          return;
-        }
-        throw err;
+      const accounts = await connector.getAccounts();
+      if (accounts) {
+        setUserAddresses(accounts);
       }
     } catch (err) {
       console.error("Error connecting wallet:", err);
