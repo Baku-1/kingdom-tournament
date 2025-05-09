@@ -100,9 +100,9 @@ export default function CreateTournament() {
         // Get ERC20 token balances
         const tokenAddresses: TokenAddresses = {
           RON: connectedAddress,
-          AXS: '0x97a9107c1793bc407d6f527b77e7fff4d812bece',
-          SLP: '0xa8754b9fa15fc18bb59458815510e40a12cd2014',
-          USDC: '0x0b7007c13325c48911f73a2dad5fa5dcbf808adc'
+          AXS: '0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44', // AXS token on Saigon testnet
+          SLP: '0x2C89bbc92BD86F80c154c6Bead4B1C3bB0C4b911', // SLP token on Saigon testnet
+          USDC: '0x0b7007c13325c48911f73a2dad5fa5dcbf808adc' // USDC token on Saigon testnet
         };
 
         // Fetch each token balance
@@ -255,9 +255,9 @@ export default function CreateTournament() {
     // Token addresses from Ronin blockchain
     const tokenAddresses: TokenAddresses = {
       RON: connectedAddress || '', // RON is the native token, so we use the wallet address
-      AXS: '0x97a9107c1793bc407d6f527b77e7fff4d812bece', // AXS token on Ronin
-      SLP: '0xa8754b9fa15fc18bb59458815510e40a12cd2014', // SLP token on Ronin
-      USDC: '0x0b7007c13325c48911f73a2dad5fa5dcbf808adc', // USDC token on Ronin
+      AXS: '0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44', // AXS token on Saigon testnet
+      SLP: '0x2C89bbc92BD86F80c154c6Bead4B1C3bB0C4b911', // SLP token on Saigon testnet
+      USDC: '0x0b7007c13325c48911f73a2dad5fa5dcbf808adc' // USDC token on Saigon testnet
     };
 
     // Only set the token address if the token is selected and the address exists
