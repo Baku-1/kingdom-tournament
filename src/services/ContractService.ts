@@ -79,11 +79,20 @@ export class ContractService {
       throw new Error('Provider not available');
     }
 
-    return new ethers.Contract(
-      tokenAddress,
-      ERC20_ABI,
-      withSigner && this.signer ? this.signer : this.provider
-    );
+    if (!tokenAddress || tokenAddress === '0x0000000000000000000000000000000000000000') {
+      throw new Error('Invalid token address');
+    }
+
+    try {
+      return new ethers.Contract(
+        tokenAddress,
+        ERC20_ABI,
+        withSigner && this.signer ? this.signer : this.provider
+      );
+    } catch (error) {
+      console.error(`Error creating ERC20 contract for address ${tokenAddress}:`, error);
+      throw new Error(`Failed to create ERC20 contract: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   // Create a tournament

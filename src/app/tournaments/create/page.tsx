@@ -109,12 +109,39 @@ export default function CreateTournament() {
         for (const [token, address] of Object.entries(tokenAddresses)) {
           if (token === 'RON') continue; // Skip RON as we already got it
 
-          const tokenContract = contractService.getERC20Contract(address);
-          const balance = await tokenContract.balanceOf(connectedAddress);
-          setWalletBalances(prev => ({
-            ...prev,
-            [token]: ethers.formatUnits(balance, 18)
-          }));
+          try {
+            // Check if the contract exists and has code at the address
+            const code = await provider.getCode(address);
+            if (code === '0x') {
+              console.log(`No contract found at address ${address} for token ${token}`);
+              continue; // Skip this token if no contract exists
+            }
+
+            const tokenContract = contractService.getERC20Contract(address);
+
+            // Try to get the balance
+            try {
+              const balance = await tokenContract.balanceOf(connectedAddress);
+              setWalletBalances(prev => ({
+                ...prev,
+                [token]: ethers.formatUnits(balance, 18)
+              }));
+            } catch (balanceError) {
+              console.warn(`Error fetching balance for ${token}:`, balanceError);
+              // Set balance to 0 if there's an error
+              setWalletBalances(prev => ({
+                ...prev,
+                [token]: '0'
+              }));
+            }
+          } catch (contractError) {
+            console.warn(`Error with token contract ${token}:`, contractError);
+            // Set balance to 0 if there's an error
+            setWalletBalances(prev => ({
+              ...prev,
+              [token]: '0'
+            }));
+          }
         }
       } catch (error) {
         console.error('Error fetching wallet balances:', error);
@@ -233,8 +260,15 @@ export default function CreateTournament() {
       USDC: '0x0b7007c13325c48911f73a2dad5fa5dcbf808adc', // USDC token on Ronin
     };
 
-    if (selectedToken && tokenAddresses[selectedToken]) {
-      setTokenAddress(tokenAddresses[selectedToken]);
+    // Only set the token address if the token is selected and the address exists
+    if (selectedToken) {
+      if (selectedToken === 'RON') {
+        // For RON, use the connected address
+        setTokenAddress(connectedAddress || '');
+      } else if (tokenAddresses[selectedToken]) {
+        // For other tokens, verify they exist before setting
+        setTokenAddress(tokenAddresses[selectedToken]);
+      }
     }
   }, [selectedToken, connectedAddress]);
 
