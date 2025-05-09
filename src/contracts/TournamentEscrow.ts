@@ -1,8 +1,4 @@
 import { ethers } from 'ethers';
-import getConfig from 'next/config';
-
-// Get runtime config
-const { publicRuntimeConfig } = getConfig() || { publicRuntimeConfig: {} };
 
 // Contract ABI (Application Binary Interface)
 export const TOURNAMENT_ESCROW_ABI = [
