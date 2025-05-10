@@ -4,10 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/providers/WalletProvider';
 import Link from 'next/link';
 import { SUPPORTED_GAMES } from '@/config/ronin';
-import { contractService } from '@/services/ContractService';
-import { ethers } from 'ethers';
 
-// Tournament data will be fetched from the contract
+// Tournament data will be fetched from the backend API
 
 interface GameInfo {
   id: string;
@@ -15,27 +13,7 @@ interface GameInfo {
   image: string;
 }
 
-interface ContractTournament {
-  id: string;
-  creator: string;
-  name: string;
-  description: string;
-  gameId: string;
-  tournamentType: string;
-  maxParticipants: number;
-  createdAt: Date;
-  startTime: number;
-  registrationEndTime: number;
-  isActive: boolean;
-  rewardTokenAddress: string;
-  totalRewardAmount: bigint;
-  positionCount: number;
-  hasEntryFee: boolean;
-  entryFeeTokenAddress: string;
-  entryFeeAmount: bigint;
-  feesDistributed: boolean;
-  participantCount: number;
-}
+// Contract interface removed as we're using the backend API
 
 interface Tournament {
   id: string;
@@ -46,6 +24,7 @@ interface Tournament {
   tournamentType: string;
   maxParticipants: number;
   currentParticipants: number;
+  participants?: Array<{ address: string; name: string }>;
   startDate: Date;
   registrationEndDate: Date;
   status: string;
@@ -62,60 +41,45 @@ export default function MyTournaments() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('created');
 
-  // Get tournament status based on timestamps and active state
-  const getTournamentStatus = (tournament: ContractTournament): string => {
-    const now = Math.floor(Date.now() / 1000);
-    if (!tournament.isActive) return 'completed';
-    if (Number(tournament.startTime) <= now) return 'active';
-    return 'registration';
-  };
+  // Status is now determined by the backend API
 
   // Fetch tournaments when wallet connects
   useEffect(() => {
-    // Format tournament data from contract (moved inside useEffect to avoid dependency issues)
-    const formatTournamentData = (tournament: ContractTournament): Tournament => {
-      return {
-        id: tournament.id.toString(),
-        name: tournament.name,
-        description: tournament.description,
-        game: tournament.gameId,
-        creator: tournament.creator,
-        tournamentType: tournament.tournamentType,
-        maxParticipants: Number(tournament.maxParticipants),
-        currentParticipants: Number(tournament.participantCount),
-        startDate: new Date(Number(tournament.startTime) * 1000),
-        registrationEndDate: new Date(Number(tournament.registrationEndTime) * 1000),
-        status: getTournamentStatus(tournament),
-        rewardType: tournament.rewardTokenAddress === ethers.ZeroAddress ? 'nft' : 'token',
-        rewardAmount: tournament.rewardTokenAddress !== ethers.ZeroAddress ? ethers.formatEther(tournament.totalRewardAmount) : undefined,
-        rewardToken: tournament.rewardTokenAddress !== ethers.ZeroAddress ? 'RON' : undefined,
-        rewardNftName: tournament.rewardTokenAddress === ethers.ZeroAddress ? 'Tournament NFT' : undefined,
-      };
-    };
-
     const fetchTournaments = async () => {
       if (!connectedAddress) return;
 
       try {
         setIsLoading(true);
 
-        // Get all tournaments from contract
-        const allTournaments = await contractService.getAllTournaments();
+        // Get all tournaments from backend API
+        const response = await fetch('/api/tournaments');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch tournaments');
+        }
+
+        const allTournaments = await response.json();
+
+        // Process tournaments - convert date strings to Date objects
+        const processedTournaments = allTournaments.map((tournament: any) => ({
+          ...tournament,
+          startDate: new Date(tournament.startDate),
+          registrationEndDate: new Date(tournament.registrationEndDate)
+        }));
 
         // Filter created tournaments
-        const created = allTournaments
-          .filter((t: ContractTournament) =>
-            t.creator.toLowerCase() === connectedAddress.toLowerCase()
-          )
-          .map(formatTournamentData);
+        const created = processedTournaments.filter((t: Tournament) =>
+          t.creator.toLowerCase() === connectedAddress.toLowerCase()
+        );
 
         // Filter joined tournaments
-        const joined = allTournaments
-          .filter(async (t: ContractTournament) => {
-            const isRegistered = await contractService.isParticipantRegistered(t.id.toString(), connectedAddress);
-            return isRegistered && t.creator.toLowerCase() !== connectedAddress.toLowerCase();
-          })
-          .map(formatTournamentData);
+        const joined = processedTournaments.filter((t: Tournament) => {
+          // Check if user is in participants list
+          const isParticipant = t.participants?.some(
+            (p: any) => p.address.toLowerCase() === connectedAddress.toLowerCase()
+          );
+          return isParticipant && t.creator.toLowerCase() !== connectedAddress.toLowerCase();
+        });
 
         setCreatedTournaments(created);
         setJoinedTournaments(joined);

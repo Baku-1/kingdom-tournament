@@ -57,6 +57,7 @@ export class ContractService {
   }
 
   // Get tournament escrow contract
+  
   getTournamentEscrowContract(withSigner = false) {
     if (!this.provider) {
       throw new Error('Provider not available');
@@ -296,8 +297,24 @@ export class ContractService {
   // Get minimum registration period
   async getMinRegistrationPeriod() {
     try {
+      // Check if provider is available
+      if (!this.provider) {
+        console.warn('Provider not available for MIN_REGISTRATION_PERIOD, using default value');
+        return 3600; // 1 hour in seconds
+      }
+
+      // Check network connection before attempting contract call
+      try {
+        await this.provider.getBlockNumber();
+      } catch (networkError) {
+        console.error('Network connection error:', networkError);
+        console.warn('Using default MIN_REGISTRATION_PERIOD due to network connection issues');
+        return 3600; // 1 hour in seconds
+      }
+
       const contract = this.getTournamentEscrowContract();
-      return await contract.MIN_REGISTRATION_PERIOD();
+      const result = await contract.MIN_REGISTRATION_PERIOD();
+      return result;
     } catch (error) {
       console.error('Error getting MIN_REGISTRATION_PERIOD:', error);
       // Default to 1 hour (in seconds) if the contract call fails

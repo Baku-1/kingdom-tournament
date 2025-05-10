@@ -46,6 +46,9 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check if we're in the browser environment
+    if (typeof window === 'undefined') return;
+
     const initializeConnector = async () => {
       try {
         const newConnector = await requestRoninWalletConnector();
@@ -101,7 +104,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
         // Update the connector in the ContractService
         contractService.setConnector(connector);
-        
+
         // Set network type based on chain ID
         const isTestnet = connectResult.chainId === 2021; // 2021 is Ronin testnet chain ID
         contractService.setNetwork(isTestnet);

@@ -23,6 +23,7 @@
     "@sky-mavis/tanto-connect": "^0.0.11",
     "ethers": "^6.13.5",
     "framer-motion": "^11.0.3",
+    "mongoose": "^8.14.2",
     "next": "15.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

@@ -4,90 +4,50 @@ import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/providers/WalletProvider';
 import Link from 'next/link';
 import { SUPPORTED_GAMES } from '@/config/ronin';
-
-// Mock data for tournaments
-const MOCK_TOURNAMENTS = [
-  {
-    id: '1',
-    name: 'Axie Infinity Championship',
-    description: 'Compete in the ultimate Axie Infinity tournament for RON tokens!',
-    game: 'axie-infinity',
-    creator: '0x1234567890abcdef1234567890abcdef12345678',
-    tournamentType: 'single-elimination',
-    maxParticipants: 16,
-    currentParticipants: 8,
-    startDate: new Date(Date.now() + 86400000 * 3), // 3 days from now
-    registrationEndDate: new Date(Date.now() + 86400000 * 2), // 2 days from now
-    status: 'registration',
-    rewardType: 'token',
-    rewardAmount: '1000',
-    rewardToken: 'RON',
-  },
-  {
-    id: '2',
-    name: 'Ronin Rumble',
-    description: 'Weekly tournament for Rumble players with NFT rewards',
-    game: 'ronin-rumble',
-    creator: '0xabcdef1234567890abcdef1234567890abcdef12',
-    tournamentType: 'double-elimination',
-    maxParticipants: 32,
-    currentParticipants: 20,
-    startDate: new Date(Date.now() + 86400000 * 1), // 1 day from now
-    registrationEndDate: new Date(Date.now() + 3600000 * 12), // 12 hours from now
-    status: 'registration',
-    rewardType: 'nft',
-    rewardNftName: 'Nexus NFT Character',
-  },
-  {
-    id: '3',
-    name: 'Moshi Admirals',
-    description: 'Battle to the top in this high-stakes tournament',
-    game: 'admirals',
-    creator: '0x7890abcdef1234567890abcdef1234567890abcd',
-    tournamentType: 'single-elimination',
-    maxParticipants: 8,
-    currentParticipants: 8,
-    startDate: new Date(Date.now() - 86400000 * 1), // 1 day ago
-    registrationEndDate: new Date(Date.now() - 86400000 * 2), // 2 days ago
-    status: 'active',
-    rewardType: 'token',
-    rewardAmount: '500',
-    rewardToken: 'RON',
-  },
-  {
-    id: '4',
-    name: 'NeoTrades Swapping Competition',
-    description: 'Show off your trading skills in this special event',
-    game: 'neotrades',
-    creator: '0xdef1234567890abcdef1234567890abcdef123456',
-    tournamentType: 'single-elimination',
-    maxParticipants: 64,
-    currentParticipants: 32,
-    startDate: new Date(Date.now() + 86400000 * 7), // 7 days from now
-    registrationEndDate: new Date(Date.now() + 86400000 * 5), // 5 days from now
-    status: 'registration',
-    rewardType: 'token',
-    rewardAmount: '2000',
-    rewardToken: 'AXS',
-  },
-];
+import { Tournament } from '@/types/tournament';
 
 export default function Tournaments() {
   const { connectedAddress } = useWallet();
-  const [tournaments] = useState(MOCK_TOURNAMENTS);
-  const [filteredTournaments, setFilteredTournaments] = useState(MOCK_TOURNAMENTS);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [gameFilter, setGameFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate loading data
+  // Fetch tournaments from the backend API
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    const fetchTournaments = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/tournaments');
 
-    return () => clearTimeout(timer);
+        if (!response.ok) {
+          throw new Error('Failed to fetch tournaments');
+        }
+
+        const data = await response.json();
+
+        // Convert string dates to Date objects
+        const formattedData = data.map((tournament: any) => ({
+          ...tournament,
+          startDate: new Date(tournament.startDate),
+          registrationEndDate: new Date(tournament.registrationEndDate),
+        }));
+
+        setTournaments(formattedData);
+        setFilteredTournaments(formattedData);
+      } catch (error) {
+        console.error('Error fetching tournaments:', error);
+        // Set empty arrays if there's an error
+        setTournaments([]);
+        setFilteredTournaments([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTournaments();
   }, []);
 
   // Filter tournaments based on search term and filters
@@ -275,7 +235,7 @@ export default function Tournaments() {
                         <span className="font-medium">
                           {tournament.rewardType === 'token'
                             ? `${tournament.rewardAmount} ${tournament.rewardToken}`
-                            : tournament.rewardNftName}
+                            : 'NFT Reward'}
                         </span>
                       </div>
                     </div>

@@ -19,148 +19,7 @@ import {
 } from '@/utils/bracketUtils';
 import { Tournament } from '@/types/tournament';
 
-// Mock tournament data (would be fetched from API/blockchain in a real app)
-const MOCK_TOURNAMENT = {
-  id: '1',
-  name: 'Axie Infinity Championship',
-  description: 'Compete in the ultimate Axie Infinity tournament for RON tokens! This tournament will test your skills and strategy in Axie Infinity battles. The top players will earn RON tokens as rewards.',
-  game: 'axie-infinity',
-  creator: '0x1234567890abcdef1234567890abcdef12345678',
-  tournamentType: 'single-elimination' as TournamentType,
-  maxParticipants: 16,
-  currentParticipants: 8,
-  participants: [
-    { address: '0x1111111111111111111111111111111111111111', name: 'Player 1' },
-    { address: '0x2222222222222222222222222222222222222222', name: 'Player 2' },
-    { address: '0x3333333333333333333333333333333333333333', name: 'Player 3' },
-    { address: '0x4444444444444444444444444444444444444444', name: 'Player 4' },
-    { address: '0x5555555555555555555555555555555555555555', name: 'Player 5' },
-    { address: '0x6666666666666666666666666666666666666666', name: 'Player 6' },
-    { address: '0x7777777777777777777777777777777777777777', name: 'Player 7' },
-    { address: '0x8888888888888888888888888888888888888888', name: 'Player 8' },
-  ],
-  startDate: new Date(Date.now() + 86400000 * 3), // 3 days from now
-  registrationEndDate: new Date(Date.now() + 86400000 * 2), // 2 days from now
-  status: 'registration',
-  rewardType: 'token',
-  rewardAmount: '1000',
-  rewardToken: 'RON',
-  rewardDistribution: {
-    first: 70,
-    second: 20,
-    third: 10,
-    fourth: 0,
-  },
-  // Entry fee data
-  hasEntryFee: true,
-  entryFeeAmount: '10',
-  entryFeeToken: 'RON',
-  // Mock bracket data
-  brackets: [
-    {
-      round: 1,
-      bracketType: 'winners',
-      matches: [
-        {
-          id: 101,
-          round: 1,
-          position: 0,
-          player1: { address: '0x1111111111111111111111111111111111111111', name: 'Player 1' },
-          player2: { address: '0x2222222222222222222222222222222222222222', name: 'Player 2' },
-          winner: null,
-          loser: null,
-          status: 'pending',
-          bracketType: 'winners',
-          matchType: 'normal',
-        },
-        {
-          id: 102,
-          round: 1,
-          position: 1,
-          player1: { address: '0x3333333333333333333333333333333333333333', name: 'Player 3' },
-          player2: { address: '0x4444444444444444444444444444444444444444', name: 'Player 4' },
-          winner: null,
-          loser: null,
-          status: 'pending',
-          bracketType: 'winners',
-          matchType: 'normal',
-        },
-        {
-          id: 103,
-          round: 1,
-          position: 2,
-          player1: { address: '0x5555555555555555555555555555555555555555', name: 'Player 5' },
-          player2: { address: '0x6666666666666666666666666666666666666666', name: 'Player 6' },
-          winner: null,
-          loser: null,
-          status: 'pending',
-          bracketType: 'winners',
-          matchType: 'normal',
-        },
-        {
-          id: 104,
-          round: 1,
-          position: 3,
-          player1: { address: '0x7777777777777777777777777777777777777777', name: 'Player 7' },
-          player2: { address: '0x8888888888888888888888888888888888888888', name: 'Player 8' },
-          winner: null,
-          loser: null,
-          status: 'pending',
-          bracketType: 'winners',
-          matchType: 'normal',
-        },
-      ],
-    },
-    {
-      round: 2,
-      bracketType: 'winners',
-      matches: [
-        {
-          id: 201,
-          round: 2,
-          position: 0,
-          player1: null,
-          player2: null,
-          winner: null,
-          loser: null,
-          status: 'pending',
-          bracketType: 'winners',
-          matchType: 'normal',
-        },
-        {
-          id: 202,
-          round: 2,
-          position: 1,
-          player1: null,
-          player2: null,
-          winner: null,
-          loser: null,
-          status: 'pending',
-          bracketType: 'winners',
-          matchType: 'normal',
-        },
-      ],
-    },
-    {
-      round: 3,
-      bracketType: 'winners',
-      matches: [
-        {
-          id: 301,
-          round: 3,
-          position: 0,
-          player1: null,
-          player2: null,
-          winner: null,
-          loser: null,
-          status: 'pending',
-          bracketType: 'winners',
-          matchType: 'finals',
-        },
-      ],
-    },
-  ],
-};
+// No mock tournament data - we'll fetch real data from the API
 
 // Helper component for displaying details
 function SimpleDetail({ label, value }: { label: string; value: string }) {
@@ -179,7 +38,7 @@ export default function TournamentDetail() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ title: '', message: '', type: '' });
 
-  const [tournament, setTournament] = useState<Tournament>(MOCK_TOURNAMENT as Tournament);
+  const [tournament, setTournament] = useState<Tournament | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
@@ -195,7 +54,7 @@ export default function TournamentDetail() {
     setTimeout(() => setShowToast(false), 5000);
   };
 
-  // Fetch tournament data from contract
+  // Fetch tournament data from backend API
   useEffect(() => {
     const fetchTournamentData = async () => {
       try {
@@ -203,111 +62,35 @@ export default function TournamentDetail() {
 
         setIsLoading(true);
 
-        // For development/testing, we can use the mock data
-        // Comment out the next lines and uncomment the contract calls when ready for production
+        // Fetch tournament data from the backend API
+        console.log(`Fetching tournament data for ID: ${tournamentId}`);
+        const response = await fetch(`/api/tournaments/${tournamentId}`);
 
-        // Mock data for development
-        //const mockTournamentData = MOCK_TOURNAMENT;
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error(`API error: ${errorData.error || 'Unknown error'}`);
+          throw new Error(errorData.error || 'Failed to fetch tournament data');
+        }
 
-        // Fetch tournament data from the contract
-        const tournamentData = await contractService.getTournamentInfo(tournamentId);
+        const tournamentData = await response.json();
+        console.log(`Tournament data received:`, tournamentData);
 
-        // Format the data to match our Tournament type
-        const formattedTournament: Tournament = {
-          id: tournamentData.id,
-          name: tournamentData.name,
-          description: tournamentData.description,
-          game: tournamentData.gameId,
-          creator: tournamentData.creator,
-          tournamentType: tournamentData.tournamentType as TournamentType,
-          maxParticipants: tournamentData.maxParticipants,
-          currentParticipants: tournamentData.participantCount,
-          participants: [] as Participant[], // Explicitly type as Participant[]
-          startDate: tournamentData.startDate,
-          registrationEndDate: tournamentData.registrationEndDate,
-          status: new Date() < tournamentData.registrationEndDate ? 'registration' :
-                 new Date() < tournamentData.startDate ? 'active' : 'completed',
-          rewardType: tournamentData.rewardType as 'token' | 'nft',
-          rewardAmount: tournamentData.totalRewardAmount,
-          rewardToken: tournamentData.rewardTokenAddress === '0x0000000000000000000000000000000000000000' ? 'RON' : 'Token',
-          rewardDistribution: {
-            first: 0,
-            second: 0,
-            third: 0,
-            fourth: 0,
-          },
-          hasEntryFee: tournamentData.hasEntryFee,
-          entryFeeAmount: tournamentData.entryFeeAmount,
-          entryFeeToken: tournamentData.entryFeeTokenAddress === '0x0000000000000000000000000000000000000000' ? 'RON' : 'Token',
-          entryFeeTokenAddress: tournamentData.entryFeeTokenAddress,
-          brackets: [], // Will be generated based on participants
+        // Convert string dates to Date objects
+        const formattedTournament = {
+          ...tournamentData,
+          startDate: new Date(tournamentData.startDate),
+          registrationEndDate: new Date(tournamentData.registrationEndDate),
         };
 
         // Check if the connected user is registered
         if (connectedAddress) {
-          const isUserRegistered = await contractService.isParticipantRegistered(tournamentId, connectedAddress);
+          const isUserRegistered = formattedTournament.participants.some(
+            (p: Participant) => p.address.toLowerCase() === connectedAddress.toLowerCase()
+          );
           setIsRegistered(isUserRegistered);
 
           // Check if user is creator
           setIsCreator(formattedTournament.creator.toLowerCase() === connectedAddress.toLowerCase());
-        }
-
-        // Calculate reward distribution based on position reward amounts
-        if (tournamentData.positionRewardAmounts.length > 0) {
-          const totalReward = tournamentData.positionRewardAmounts.reduce((sum: number, amount: string) => sum + parseFloat(amount), 0);
-          if (totalReward > 0) {
-            if (tournamentData.positionRewardAmounts.length >= 1) {
-              formattedTournament.rewardDistribution.first = Math.round(parseFloat(tournamentData.positionRewardAmounts[0]) / totalReward * 100);
-            }
-            if (tournamentData.positionRewardAmounts.length >= 2) {
-              formattedTournament.rewardDistribution.second = Math.round(parseFloat(tournamentData.positionRewardAmounts[1]) / totalReward * 100);
-            }
-            if (tournamentData.positionRewardAmounts.length >= 3) {
-              formattedTournament.rewardDistribution.third = Math.round(parseFloat(tournamentData.positionRewardAmounts[2]) / totalReward * 100);
-            }
-            if (tournamentData.positionRewardAmounts.length >= 4) {
-              formattedTournament.rewardDistribution.fourth = Math.round(parseFloat(tournamentData.positionRewardAmounts[3]) / totalReward * 100);
-            }
-          }
-        }
-
-        // Fetch participants using events (more efficient)
-        try {
-          if (contractService.provider) {
-            const participants = await contractService.getParticipantsFromEvents(tournamentId, contractService.provider);
-            formattedTournament.participants = participants;
-
-            // Check if the connected user is registered
-            if (connectedAddress) {
-              const isUserRegistered = participants.some(
-                (p) => p.address.toLowerCase() === connectedAddress.toLowerCase()
-              );
-              setIsRegistered(isUserRegistered);
-
-              // Check if user is creator
-              setIsCreator(formattedTournament.creator.toLowerCase() === connectedAddress.toLowerCase());
-            }
-          }
-        } catch (participantError) {
-          console.error('Error fetching participants:', participantError);
-
-          // Fallback: Check if the current user is registered
-          if (connectedAddress) {
-            try {
-              const isUserRegistered = await contractService.isParticipantRegistered(tournamentId, connectedAddress);
-              setIsRegistered(isUserRegistered);
-
-              // If registered, add to participants list
-              if (isUserRegistered) {
-                formattedTournament.participants.push({
-                  address: connectedAddress,
-                  name: `Player ${formattedTournament.participants.length + 1}`
-                });
-              }
-            } catch (error) {
-              console.error('Error checking if user is registered:', error);
-            }
-          }
         }
 
         setTournament(formattedTournament as Tournament);
@@ -371,28 +154,31 @@ export default function TournamentDetail() {
       return;
     }
 
+    if (!tournament) {
+      displayToast(
+        'Error',
+        'Tournament data not loaded. Please refresh the page.',
+        'error'
+      );
+      return;
+    }
+
     try {
-      // Connect to wallet
-      await contractService.connect();
+      // Register using the backend API
+      const response = await fetch(`/api/tournaments/${tournamentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          address: connectedAddress,
+          name: `Player ${tournament.currentParticipants + 1}`
+        }),
+      });
 
-      // Handle entry fee if required
-      if (tournament.hasEntryFee) {
-        displayToast(
-          'Processing payment',
-          `Sending ${tournament.entryFeeAmount} ${tournament.entryFeeToken} entry fee...`,
-          'info'
-        );
-
-        // Register with entry fee
-        // The contract handles the fee distribution (97.5% to creator, 2.5% to platform)
-        await contractService.registerWithEntryFee(
-          tournamentId,
-          tournament.entryFeeTokenAddress || '0x0000000000000000000000000000000000000000',
-          tournament.entryFeeAmount
-        );
-      } else {
-        // No entry fee, just register
-        await contractService.registerForTournament(tournamentId);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to register for tournament');
       }
 
       // Update local state to reflect registration
@@ -521,7 +307,7 @@ export default function TournamentDetail() {
 
   // Count pending matches that need reporting
   const getPendingMatchesCount = (): number => {
-    if (!tournament.brackets) return 0;
+    if (!tournament || !tournament.brackets) return 0;
 
     let count = 0;
     tournament.brackets.forEach(bracket => {
@@ -558,6 +344,15 @@ export default function TournamentDetail() {
       displayToast(
         'Error',
         'Please select a winner',
+        'error'
+      );
+      return;
+    }
+
+    if (!tournament) {
+      displayToast(
+        'Error',
+        'Tournament data not loaded. Please refresh the page.',
         'error'
       );
       return;
@@ -638,11 +433,11 @@ export default function TournamentDetail() {
 
       // Update tournament state with a timestamp to force a complete re-render
       setTimeout(() => {
-        setTournament(prevTournament => ({
-          ...prevTournament,
+        setTournament({
+          ...tournament,
           brackets: updatedBrackets,
           lastUpdated: Date.now() // Add a timestamp to force React to detect the change
-        }));
+        });
       }, 50);
 
       // Check if tournament is complete
@@ -716,7 +511,7 @@ export default function TournamentDetail() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !tournament) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center">
@@ -950,11 +745,13 @@ export default function TournamentDetail() {
                     tournamentType={tournament.tournamentType}
                     onBracketsGenerated={(generatedBrackets) => {
                       // Update tournament with generated brackets
-                      setTournament({
-                        ...tournament,
-                        brackets: generatedBrackets,
-                        status: 'active' as const
-                      });
+                      if (tournament) {
+                        setTournament({
+                          ...tournament,
+                          brackets: generatedBrackets,
+                          status: 'active' as const
+                        });
+                      }
                     }}
                   />
                 </div>
@@ -1048,6 +845,15 @@ export default function TournamentDetail() {
                       <button
                         className="bg-gradient-to-r from-cyber-secondary to-red-500 hover:from-red-500 hover:to-cyber-secondary text-white px-4 py-2 rounded shadow-cyber-shadow-sm"
                         onClick={async () => {
+                          if (!tournament) {
+                            displayToast(
+                              'Error',
+                              'Tournament data not loaded. Please refresh the page.',
+                              'error'
+                            );
+                            return;
+                          }
+
                           // Check if tournament has a champion
                           const isComplete = isTournamentComplete(tournament.brackets, tournament.tournamentType as TournamentType);
                           if (!isComplete) {
