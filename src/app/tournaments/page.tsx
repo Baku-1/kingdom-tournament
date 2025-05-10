@@ -29,7 +29,7 @@ export default function Tournaments() {
         const data = await response.json();
 
         // Convert string dates to Date objects
-        const formattedData = data.map((tournament: any) => ({
+        const formattedData = data.map((tournament: Tournament) => ({
           ...tournament,
           startDate: new Date(tournament.startDate),
           registrationEndDate: new Date(tournament.registrationEndDate),

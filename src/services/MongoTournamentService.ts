@@ -1,5 +1,4 @@
 import { Tournament } from '@/types/tournament';
-import { TournamentType } from '@/utils/bracketUtils';
 import connectToDatabase from '@/lib/mongodb';
 import TournamentModel from '@/models/Tournament';
 
@@ -116,7 +115,7 @@ export class MongoTournamentService {
 
       // Get all tournaments from MongoDB
       const tournaments = await TournamentModel.find({}).sort({ createdAt: -1 });
-      
+
       return tournaments.map(t => t.toJSON() as Tournament);
     } catch (error) {
       console.error('Error getting all tournaments:', error);
@@ -134,7 +133,7 @@ export class MongoTournamentService {
 
       // Find the tournament
       const tournament = await TournamentModel.findOne({ id: tournamentId });
-      
+
       if (!tournament) {
         throw new Error('Tournament not found');
       }

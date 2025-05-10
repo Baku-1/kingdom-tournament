@@ -15,7 +15,7 @@ const loadTournamentsFromStorage = (): Tournament[] => {
       const parsed = JSON.parse(storedTournaments);
 
       // Convert string dates back to Date objects
-      return parsed.map((tournament: any) => ({
+      return parsed.map((tournament: Tournament) => ({
         ...tournament,
         startDate: new Date(tournament.startDate),
         registrationEndDate: new Date(tournament.registrationEndDate),

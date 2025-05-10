@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { Tournament as TournamentType } from '@/types/tournament';
-import { TournamentType as BracketType } from '@/utils/bracketUtils';
 
 // Define the participant schema
 const ParticipantSchema = new Schema({
@@ -66,11 +65,11 @@ const TournamentSchema = new Schema({
       ret.id = ret.id || ret._id.toString();
       delete ret._id;
       delete ret.__v;
-      
+
       // Convert date strings to Date objects
       ret.startDate = new Date(ret.startDate);
       ret.registrationEndDate = new Date(ret.registrationEndDate);
-      
+
       return ret;
     }
   }
