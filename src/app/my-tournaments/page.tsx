@@ -61,7 +61,7 @@ export default function MyTournaments() {
         const allTournaments = await response.json();
 
         // Process tournaments - convert date strings to Date objects
-        const processedTournaments = allTournaments.map((tournament: any) => ({
+        const processedTournaments = allTournaments.map((tournament: Tournament) => ({
           ...tournament,
           startDate: new Date(tournament.startDate),
           registrationEndDate: new Date(tournament.registrationEndDate)
@@ -76,7 +76,7 @@ export default function MyTournaments() {
         const joined = processedTournaments.filter((t: Tournament) => {
           // Check if user is in participants list
           const isParticipant = t.participants?.some(
-            (p: any) => p.address.toLowerCase() === connectedAddress.toLowerCase()
+            (p: { address: string; name: string }) => p.address.toLowerCase() === connectedAddress.toLowerCase()
           );
           return isParticipant && t.creator.toLowerCase() !== connectedAddress.toLowerCase();
         });
