@@ -144,7 +144,7 @@ export class MongoTournamentService {
       }
 
       // Check if participant is already registered
-      if (tournament.participants.some(p => p.address === participant.address)) {
+      if (tournament.participants.some((p: { address: string; name: string }) => p.address === participant.address)) {
         throw new Error('Already registered for this tournament');
       }
 

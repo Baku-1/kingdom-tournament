@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { mongoTournamentService } from '@/services/MongoTournamentService';
 
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
 /**
  * GET /api/tournaments/[id]
  * Returns a specific tournament by ID
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
-    // Await params to fix the Next.js warning
-    const { id: tournamentId } = await Promise.resolve(params);
+    // Get the tournament ID from params (now a Promise)
+    const resolvedParams = await params;
+    const tournamentId = resolvedParams.id;
 
     // Log the request for debugging
     console.log(`GET request for tournament ID: ${tournamentId}`);
@@ -29,7 +34,8 @@ export async function GET(
     console.log(`Successfully retrieved tournament: ${tournament.name}`);
     return NextResponse.json(tournament);
   } catch (error) {
-    console.error(`Error in GET /api/tournaments/${params.id}:`, error);
+    const resolvedParams = await params;
+    console.error(`Error in GET /api/tournaments/${resolvedParams.id}:`, error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to get tournament' },
       { status: 500 }
@@ -43,10 +49,13 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
-    const tournamentId = params.id;
+    // Get the tournament ID from params (now a Promise)
+    const resolvedParams = await params;
+    const tournamentId = resolvedParams.id;
+
     const { address, name } = await request.json();
 
     if (!address) {
@@ -66,7 +75,8 @@ export async function POST(
       message: 'Successfully registered for tournament'
     });
   } catch (error) {
-    console.error(`Error in POST /api/tournaments/${params.id}:`, error);
+    const resolvedParams = await params;
+    console.error(`Error in POST /api/tournaments/${resolvedParams.id}:`, error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to register for tournament' },
       { status: 500 }
